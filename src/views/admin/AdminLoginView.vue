@@ -75,7 +75,7 @@ const handleSubmit = async () => {
             label="用户名"
             name="adminName"
             :rules="[{ required: true, message: '请输入用户名' }]"
-            class="mb-4"
+            class="mb-4 white-label"
           >
             <a-input
               v-model:value="formState.adminName"
@@ -93,7 +93,7 @@ const handleSubmit = async () => {
             label="密码"
             name="password"
             :rules="[{ required: true, message: '请输入密码' }]"
-            class="mb-6"
+            class="mb-6 white-label"
           >
             <a-input-password
               v-model:value="formState.password"
@@ -137,6 +137,14 @@ const handleSubmit = async () => {
 </template>
 
 <style scoped>
+.white-label :deep(.ant-form-item-label > label) {
+  color: #ffffff !important;
+}
+
+.white-label :deep(.ant-form-item-label > label::before) {
+  display: none !important;
+}
+
 .custom-input :deep(.ant-input),
 .custom-input :deep(.ant-input-password) {
   background-color: #fff !important;
