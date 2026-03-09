@@ -108,7 +108,9 @@ onMounted(async () => {
     selectedKeys.value = ['dashboard'];
   } else {
     const key = path.split('/')[2];
-    selectedKeys.value = [key];
+    if (key) {
+      selectedKeys.value = [key];
+    }
   }
 
   // 获取管理员信息
@@ -126,7 +128,7 @@ onMounted(async () => {
       :trigger="null"
       collapsible
       theme="dark"
-      class="bg-slate-900"
+      class="bg-slate-900 h-screen"
       width="240"
     >
       <!-- Logo -->
@@ -199,7 +201,7 @@ onMounted(async () => {
       </a-layout-header>
 
       <!-- Content -->
-      <a-layout-content class="p-6">
+      <a-layout-content class="p-6 flex-1">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />

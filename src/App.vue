@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import TheHeader from '@/components/layout/TheHeader.vue'
 import TheFooter from '@/components/layout/TheFooter.vue'
 import { Toaster } from '@/components/ui/sonner'
+
+const route = useRoute()
+
+// 判断当前是否在后台管理界面
+const isAdminPage = computed(() => {
+  return route.path.startsWith('/admin')
+})
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col bg-zinc-50">
-    <TheHeader />
+    <TheHeader v-if="!isAdminPage" />
     <main class="flex-1">
       <RouterView v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -15,7 +24,7 @@ import { Toaster } from '@/components/ui/sonner'
         </transition>
       </RouterView>
     </main>
-    <TheFooter />
+    <TheFooter v-if="!isAdminPage" />
     <Toaster position="top-center" />
   </div>
 </template>

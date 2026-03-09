@@ -126,7 +126,7 @@ onMounted(async () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      class="!text-white hover:text-white hover:bg-white/10 text-xs"
+                      class="text-white! hover:text-white hover:bg-white/10 text-xs"
                       @click="router.push({ path: '/search', query: { keyword: '热销' } })"
                     >
                       <TrendingUp class="w-3 h-3 mr-1" />

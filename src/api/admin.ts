@@ -406,10 +406,3 @@ export const deleteShop = (id: string) => {
 export const getShopDetail = (id: string) => {
   return request.get<{ code: number; shop: Shop }>(`/shopList/${id}`);
 };
-
-// ==================== 统计数据 API ====================
-
-// 获取统计数据 - 响应: { code: 200, data: { productCount, orderCount, userCount, brandCount } }
-export const getDashboardStats = () => {
-  return request.get<{ code: number; data: { productCount: number; orderCount: number; userCount: number; brandCount: number } }>('/dashboard/stats');
-};
