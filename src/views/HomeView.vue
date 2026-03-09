@@ -1,59 +1,59 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { motion } from 'motion-v'
 import {
-  ChevronRight,
-  Zap,
-  Gift,
-  Truck,
-  Shield,
-  TrendingUp,
-  Sparkles,
-  ArrowRight
-} from 'lucide-vue-next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import ProductCard from '@/components/ProductCard.vue'
-import PixelSnow from '@/components/effects/PixelSnow.vue'
-import GlowBox from '@/components/effects/GlowBox.vue'
-import { searchProducts } from '@/api/product'
-import type { ProductInfo } from '@/api/types'
+	ArrowRight,
+	ChevronRight,
+	Gift,
+	Shield,
+	Sparkles,
+	TrendingUp,
+	Truck,
+	Zap,
+} from "lucide-vue-next";
+import { motion } from "motion-v";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { searchProducts } from "@/api/product";
+import type { ProductInfo } from "@/api/types";
+import GlowBox from "@/components/effects/GlowBox.vue";
+import PixelSnow from "@/components/effects/PixelSnow.vue";
+import ProductCard from "@/components/ProductCard.vue";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-const router = useRouter()
+const router = useRouter();
 
-const hotProducts = ref<ProductInfo[]>([])
+const hotProducts = ref<ProductInfo[]>([]);
 
 // 动画配置
 const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
-}
+	hidden: { opacity: 0 },
+	visible: {
+		opacity: 1,
+		transition: { staggerChildren: 0.08 },
+	},
+};
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-}
+	hidden: { opacity: 0, y: 20 },
+	visible: { opacity: 1, y: 0 },
+};
 
 onMounted(async () => {
-  // 加载商品数据
-  try {
-    const hotRes = await searchProducts({ keyword: '热销', pageSize: 10 })
-    hotProducts.value = hotRes.data?.data || []
-  } catch (e) {
-    console.log('加载热门商品失败')
-  }
-})
+	// 加载商品数据
+	try {
+		const hotRes = await searchProducts({ keyword: "热销", pageSize: 10 });
+		hotProducts.value = hotRes.data?.data || [];
+	} catch (e) {
+		console.log("加载热门商品失败");
+	}
+});
 </script>
 
 <template>
   <div class="min-h-screen">
     <!-- Hero 区域 -->
-    <section class="relative overflow-hidden min-h-[500px] lg:min-h-[520px] bg-black">
+    <section class="relative overflow-hidden min-h-125 lg:min-h-130 bg-black">
       <!-- 像素雪花背景 -->
       <PixelSnow
         color="#ffffff"

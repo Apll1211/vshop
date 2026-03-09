@@ -281,16 +281,12 @@ export const getSpuDetail = (id: string) => {
 
 // 添加SPU（仅商户可操作）
 export const createSpu = (data: FormData) => {
-  return request.post<{ code: number; message: string; spuId: string; imageUrls?: string[] }>('/product/spu', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  return request.post<{ code: number; message: string; spuId: string; imageUrls?: string[] }>('/product/spu', data);
 };
 
 // 修改SPU（仅商户可操作）
 export const updateSpu = (data: FormData) => {
-  return request.put<{ code: number; message: string; imageUrls?: string[] }>('/product/spu', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  return request.put<{ code: number; message: string; imageUrls?: string[] }>('/product/spu', data);
 };
 
 // 删除SPU（仅商户可操作）
@@ -321,28 +317,12 @@ export const deleteSku = (id: string) => {
 };
 
 // 添加SKU
-export const createSku = (data: {
-  name: string;
-  fullName: string;
-  shopId: string;
-  spuId: string;
-  category1Id?: string;
-  category2Id?: string;
-  categoryId?: string;
-  price: number;
-  defaultImg?: string;
-}) => {
+export const createSku = (data: FormData) => {
   return request.post<{ code: number; message: string }>('/product/sku', data);
 };
 
 // 修改SKU
-export const updateSku = (data: {
-  id: string;
-  name?: string;
-  fullName?: string;
-  price?: number;
-  defaultImg?: string;
-}) => {
+export const updateSku = (data: FormData) => {
   return request.put<{ code: number; message: string }>('/product/sku', data);
 };
 
