@@ -71,6 +71,69 @@ const routes: RouteRecordRaw[] = [
 		component: () => import("@/views/AboutView.vue"),
 		meta: { title: "关于我们 - 南渡商城" },
 	},
+	// 管理员登录页面
+	{
+		path: "/admin/login",
+		name: "admin-login",
+		component: () => import("@/views/admin/AdminLoginView.vue"),
+		meta: { title: "管理员登录 - 南渡商城" },
+	},
+	// 后台管理
+	{
+		path: "/admin",
+		component: () => import("@/views/admin/AdminLayout.vue"),
+		meta: { requiresAdminAuth: true },
+		children: [
+			{
+				path: "",
+				name: "admin-dashboard",
+				component: () => import("@/views/admin/DashboardView.vue"),
+				meta: { title: "控制台 - 南渡商城" },
+			},
+			{
+				path: "category",
+				name: "admin-category",
+				component: () => import("@/views/admin/CategoryView.vue"),
+				meta: { title: "分类管理 - 南渡商城" },
+			},
+			{
+				path: "brand",
+				name: "admin-brand",
+				component: () => import("@/views/admin/BrandView.vue"),
+				meta: { title: "品牌管理 - 南渡商城" },
+			},
+			{
+				path: "product",
+				name: "admin-product",
+				component: () => import("@/views/admin/ProductView.vue"),
+				meta: { title: "商品管理 - 南渡商城" },
+			},
+			{
+				path: "advertisement",
+				name: "admin-advertisement",
+				component: () => import("@/views/admin/AdvertisementView.vue"),
+				meta: { title: "广告管理 - 南渡商城" },
+			},
+			{
+				path: "shop",
+				name: "admin-shop",
+				component: () => import("@/views/admin/ShopView.vue"),
+				meta: { title: "店铺管理 - 南渡商城" },
+			},
+			{
+				path: "admin-user",
+				name: "admin-user",
+				component: () => import("@/views/admin/AdminUserView.vue"),
+				meta: { title: "管理员管理 - 南渡商城", requiresAdmin: true },
+			},
+			{
+				path: "log",
+				name: "admin-log",
+				component: () => import("@/views/admin/AdminLogView.vue"),
+				meta: { title: "操作日志 - 南渡商城", requiresAdmin: true },
+			},
+		],
+	},
 	{
 		path: "/:pathMatch(.*)*",
 		name: "not-found",
@@ -88,16 +151,42 @@ const router = createRouter({
 });
 
 // 路由守卫
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
 	// 设置页面标题
 	document.title = (to.meta.title as string) || "南渡商城";
 
-	// 检查是否需要登录
+	// 检查是否需要用户登录
 	if (to.meta.requiresAuth) {
 		const token = localStorage.getItem("token");
 		if (!token) {
 			next({ name: "login", query: { redirect: to.fullPath } });
 			return;
+		}
+	}
+
+	// 检查是否需要管理员登录
+	if (to.meta.requiresAdminAuth) {
+		const adminToken = localStorage.getItem("adminToken");
+		if (!adminToken) {
+			next({ name: "admin-login" });
+			return;
+		}
+
+		// 如果需要超级管理员权限
+		if (to.meta.requiresAdmin) {
+			const adminInfoStr = localStorage.getItem("adminInfo");
+			if (adminInfoStr) {
+				try {
+					const adminInfo = JSON.parse(adminInfoStr);
+					if (adminInfo.role !== "admin") {
+						next({ name: "admin-dashboard" });
+						return;
+					}
+				} catch {
+					next({ name: "admin-login" });
+					return;
+				}
+			}
 		}
 	}
 

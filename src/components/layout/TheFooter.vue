@@ -70,6 +70,9 @@ const currentYear = new Date().getFullYear();
             <li>
               <RouterLink to="/about" class="text-slate-400 hover:text-blue-300 transition-colors">关于我们</RouterLink>
             </li>
+            <li>
+              <RouterLink to="/admin/login" class="text-slate-400 hover:text-blue-300 transition-colors">商家后台</RouterLink>
+            </li>
           </ul>
         </div>
 
