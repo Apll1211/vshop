@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Padding around the shape to prevent cutoff -->
+  <rect x="20" y="20" width="160" height="160" fill="white"/>
+  <!-- Letter Z with black fill for metallic effect -->
+  <path d="M40 40 L160 40 L160 60 L75 140 L160 140 L160 160 L40 160 L40 140 L125 60 L40 60 Z" fill="black"/>
+</svg>
