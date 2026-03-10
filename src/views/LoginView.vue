@@ -1,110 +1,110 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { motion, AnimatePresence } from 'motion-v'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Phone, Lock, User, Eye, EyeOff } from 'lucide-vue-next'
-import { useUserStore } from '@/stores/user'
-import { toast } from 'vue-sonner'
+import { Eye, EyeOff, Lock, Phone, User } from "lucide-vue-next";
+import { AnimatePresence, motion } from "motion-v";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useUserStore } from "@/stores/user";
 
-const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
 
-const activeTab = ref(route.name === 'register' ? 'register' : 'login')
-const showPassword = ref(false)
-const loading = ref(false)
+const activeTab = ref(route.name === "register" ? "register" : "login");
+const showPassword = ref(false);
+const loading = ref(false);
 
 const loginForm = ref({
-  phone: '',
-  password: '',
-})
+	phone: "",
+	password: "",
+});
 
 const registerForm = ref({
-  phone: '',
-  password: '',
-  confirmPassword: '',
-  username: '',
-})
+	phone: "",
+	password: "",
+	confirmPassword: "",
+	username: "",
+});
 
-const redirect = computed(() => route.query.redirect as string || '/')
+const redirect = computed(() => (route.query.redirect as string) || "/");
 
 const formVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction < 0 ? 300 : -300,
-    opacity: 0,
-  }),
-}
+	enter: (direction: number) => ({
+		x: direction > 0 ? 300 : -300,
+		opacity: 0,
+	}),
+	center: {
+		x: 0,
+		opacity: 1,
+	},
+	exit: (direction: number) => ({
+		x: direction < 0 ? 300 : -300,
+		opacity: 0,
+	}),
+};
 
-const direction = computed(() => activeTab.value === 'register' ? 1 : -1)
+const direction = computed(() => (activeTab.value === "register" ? 1 : -1));
 
 const handleLogin = async () => {
-  if (!loginForm.value.phone) {
-    toast.error('请输入手机号')
-    return
-  }
-  if (!loginForm.value.password) {
-    toast.error('请输入密码')
-    return
-  }
+	if (!loginForm.value.phone) {
+		toast.error("请输入手机号");
+		return;
+	}
+	if (!loginForm.value.password) {
+		toast.error("请输入密码");
+		return;
+	}
 
-  loading.value = true
-  try {
-    await userStore.loginAction({
-      phone: loginForm.value.phone,
-      password: loginForm.value.password,
-    })
-    toast.success('登录成功')
-    router.push(redirect.value)
-  } catch (error: any) {
-    toast.error(error.message || '登录失败')
-  } finally {
-    loading.value = false
-  }
-}
+	loading.value = true;
+	try {
+		await userStore.loginAction({
+			phone: loginForm.value.phone,
+			password: loginForm.value.password,
+		});
+		toast.success("登录成功");
+		router.push(redirect.value);
+	} catch (error: any) {
+		toast.error(error.message || "登录失败");
+	} finally {
+		loading.value = false;
+	}
+};
 
 const handleRegister = async () => {
-  if (!registerForm.value.phone) {
-    toast.error('请输入手机号')
-    return
-  }
-  if (!registerForm.value.password) {
-    toast.error('请输入密码')
-    return
-  }
-  if (registerForm.value.password !== registerForm.value.confirmPassword) {
-    toast.error('两次密码不一致')
-    return
-  }
+	if (!registerForm.value.phone) {
+		toast.error("请输入手机号");
+		return;
+	}
+	if (!registerForm.value.password) {
+		toast.error("请输入密码");
+		return;
+	}
+	if (registerForm.value.password !== registerForm.value.confirmPassword) {
+		toast.error("两次密码不一致");
+		return;
+	}
 
-  loading.value = true
-  try {
-    await userStore.registerAction({
-      phone: registerForm.value.phone,
-      password: registerForm.value.password,
-      username: registerForm.value.username || undefined,
-    })
-    toast.success('注册成功，请登录')
-    activeTab.value = 'login'
-    loginForm.value.phone = registerForm.value.phone
-  } catch (error: any) {
-    toast.error(error.message || '注册失败')
-  } finally {
-    loading.value = false
-  }
-}
+	loading.value = true;
+	try {
+		await userStore.registerAction({
+			phone: registerForm.value.phone,
+			password: registerForm.value.password,
+			username: registerForm.value.username || undefined,
+		});
+		toast.success("注册成功，请登录");
+		activeTab.value = "login";
+		loginForm.value.phone = registerForm.value.phone;
+	} catch (error: any) {
+		toast.error(error.message || "注册失败");
+	} finally {
+		loading.value = false;
+	}
+};
 </script>
 
 <template>

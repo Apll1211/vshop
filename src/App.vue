@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import TheHeader from '@/components/layout/TheHeader.vue'
-import TheFooter from '@/components/layout/TheFooter.vue'
-import { Toaster } from '@/components/ui/sonner'
+import { computed } from "vue";
+import { RouterView, useRoute } from "vue-router";
+import TheFooter from "@/components/layout/TheFooter.vue";
+import TheHeader from "@/components/layout/TheHeader.vue";
+import { Toaster } from "@/components/ui/sonner";
 
-const route = useRoute()
+const route = useRoute();
 
 // 判断当前是否在后台管理界面
 const isAdminPage = computed(() => {
-  return route.path.startsWith('/admin')
-})
+	return route.path.startsWith("/admin");
+});
 </script>
 
 <template>
@@ -46,7 +45,6 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background-color: #0f172a; /* bg-slate-900 */
 }
 
 #app {

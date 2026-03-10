@@ -1,139 +1,139 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+	ChevronLeft,
+	ChevronRight,
+	Grid3X3,
+	List,
+	Package,
+	Search,
+} from "lucide-vue-next";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
+import { searchProducts } from "@/api";
+import type { ProductInfo } from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Search,
-  Grid3X3,
-  List,
-  ChevronLeft,
-  ChevronRight,
-  Package,
-} from 'lucide-vue-next'
-import { searchProducts } from '@/api'
-import { useCartStore } from '@/stores/cart'
-import { toast } from 'vue-sonner'
-import type { ProductInfo } from '@/api/types'
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { useCartStore } from "@/stores/cart";
 
-const route = useRoute()
-const router = useRouter()
-const cartStore = useCartStore()
+const route = useRoute();
+const router = useRouter();
+const cartStore = useCartStore();
 
-const keyword = ref('')
-const products = ref<ProductInfo[]>([])
-const loading = ref(false)
-const viewMode = ref<'grid' | 'list'>('grid')
+const keyword = ref("");
+const products = ref<ProductInfo[]>([]);
+const loading = ref(false);
+const viewMode = ref<"grid" | "list">("grid");
 
 // 分页
-const page = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
-const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+const page = ref(1);
+const pageSize = ref(20);
+const total = ref(0);
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value));
 
 // 筛选
-const sortOrder = ref<string>('default')
+const sortOrder = ref<string>("default");
 
 const formatPrice = (price: number) => {
-  return (price / 100).toFixed(2)
-}
+	return (price / 100).toFixed(2);
+};
 
 const fetchData = async () => {
-  loading.value = true
-  try {
-    // 如果没有关键词,不发送请求,显示空状态
-    if (!keyword.value || keyword.value.trim() === '') {
-      products.value = []
-      total.value = 0
-      loading.value = false
-      return
-    }
-    
-    const res = await searchProducts({
-      keyword: keyword.value,
-      pageNo: page.value,
-      pageSize: pageSize.value,
-      order: sortOrder.value !== 'default' ? sortOrder.value : undefined,
-    })
-    if (res) {
-      const data = res as any
-      products.value = data.data || []
-      total.value = data.total || 0
-    }
-  } catch (error) {
-    console.error('搜索失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
+	loading.value = true;
+	try {
+		// 如果没有关键词,不发送请求,显示空状态
+		if (!keyword.value || keyword.value.trim() === "") {
+			products.value = [];
+			total.value = 0;
+			loading.value = false;
+			return;
+		}
+
+		const res = await searchProducts({
+			keyword: keyword.value,
+			pageNo: page.value,
+			pageSize: pageSize.value,
+			order: sortOrder.value !== "default" ? sortOrder.value : undefined,
+		});
+		if (res) {
+			const data = res as any;
+			products.value = data.data || [];
+			total.value = data.total || 0;
+		}
+	} catch (error) {
+		console.error("搜索失败:", error);
+	} finally {
+		loading.value = false;
+	}
+};
 
 onMounted(() => {
-  keyword.value = route.query.keyword as string || ''
-  page.value = parseInt(route.query.page as string) || 1
-  fetchData()
-})
+	keyword.value = (route.query.keyword as string) || "";
+	page.value = parseInt(route.query.page as string) || 1;
+	fetchData();
+});
 
 watch(
-  () => route.query,
-  (newQuery) => {
-    keyword.value = newQuery.keyword as string || ''
-    page.value = parseInt(newQuery.page as string) || 1
-    fetchData()
-  }
-)
+	() => route.query,
+	(newQuery) => {
+		keyword.value = (newQuery.keyword as string) || "";
+		page.value = parseInt(newQuery.page as string) || 1;
+		fetchData();
+	},
+);
 
 const handleSearch = () => {
-  page.value = 1
-  router.push({
-    path: '/search',
-    query: {
-      keyword: keyword.value,
-      page: 1,
-    },
-  })
-}
+	page.value = 1;
+	router.push({
+		path: "/search",
+		query: {
+			keyword: keyword.value,
+			page: 1,
+		},
+	});
+};
 
 const handlePageChange = (newPage: number) => {
-  if (newPage < 1 || newPage > totalPages.value) return
-  router.push({
-    path: '/search',
-    query: {
-      ...route.query,
-      page: newPage,
-    },
-  })
-}
+	if (newPage < 1 || newPage > totalPages.value) return;
+	router.push({
+		path: "/search",
+		query: {
+			...route.query,
+			page: newPage,
+		},
+	});
+};
 
 const handleFilter = () => {
-  page.value = 1
-  fetchData()
-}
+	page.value = 1;
+	fetchData();
+};
 
 const goToDetail = (id: number) => {
-  router.push({ name: 'product-detail', params: { id } })
-}
+	router.push({ name: "product-detail", params: { id } });
+};
 
 const handleQuickSearch = (searchKeyword: string) => {
-  keyword.value = searchKeyword
-  handleSearch()
-}
+	keyword.value = searchKeyword;
+	handleSearch();
+};
 
 const addToCart = async (productId: number) => {
-  try {
-    await cartStore.addToCartAction(String(productId), 1)
-    toast.success('已添加到购物车')
-  } catch (error) {
-    toast.error('添加失败')
-  }
-}
+	try {
+		await cartStore.addToCartAction(String(productId), 1);
+		toast.success("已添加到购物车");
+	} catch (error) {
+		toast.error("添加失败");
+	}
+};
 </script>
 
 <template>

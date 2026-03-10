@@ -1,73 +1,76 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useUserStore, useCartStore, useCategoryStore } from '@/stores'
 import {
-  ShoppingCart,
-  User,
-  Search,
-  Menu,
-  Package,
-  ChevronDown,
-  LogOut,
-  Settings,
-} from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+	ChevronDown,
+	LogOut,
+	Menu,
+	Package,
+	Search,
+	Settings,
+	ShoppingCart,
+	User,
+} from "lucide-vue-next";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import LogoAnimated from "@/components/LogoAnimated.vue";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import TheCategoryNav from './TheCategoryNav.vue'
-import LogoAnimated from '@/components/LogoAnimated.vue'
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useCartStore, useCategoryStore, useUserStore } from "@/stores";
+import TheCategoryNav from "./TheCategoryNav.vue";
 
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
-const cartStore = useCartStore()
-const categoryStore = useCategoryStore()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
+const cartStore = useCartStore();
+const categoryStore = useCategoryStore();
 
-const searchKeyword = ref('')
-const isMobileMenuOpen = ref(false)
+const searchKeyword = ref("");
+const isMobileMenuOpen = ref(false);
 
-const isLoggedIn = computed(() => userStore.isLoggedIn)
-const userInfo = computed(() => userStore.userInfo)
-const cartCount = computed(() => cartStore.cartCount)
+const isLoggedIn = computed(() => userStore.isLoggedIn);
+const userInfo = computed(() => userStore.userInfo);
+const cartCount = computed(() => cartStore.cartCount);
 
 function handleSearch() {
-  if (searchKeyword.value.trim()) {
-    router.push({ name: 'search', query: { keyword: searchKeyword.value.trim() } })
-  }
+	if (searchKeyword.value.trim()) {
+		router.push({
+			name: "search",
+			query: { keyword: searchKeyword.value.trim() },
+		});
+	}
 }
 
 function handleLogout() {
-  userStore.logoutAction()
-  router.push('/')
+	userStore.logoutAction();
+	router.push("/");
 }
 
 function goToCart() {
-  router.push('/cart')
+	router.push("/cart");
 }
 
 function goToOrders() {
-  router.push('/orders')
+	router.push("/orders");
 }
 
 function goToLogin() {
-  router.push('/login')
+	router.push("/login");
 }
 
 onMounted(() => {
-  categoryStore.getCategoryList()
-  if (isLoggedIn.value) {
-    cartStore.getCartListAction()
-  }
-})
+	categoryStore.getCategoryList();
+	if (isLoggedIn.value) {
+		cartStore.getCartListAction();
+	}
+});
 </script>
 
 <template>

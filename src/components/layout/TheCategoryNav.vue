@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronRight, ChevronsRight, ChevronLeft } from "lucide-vue-next";
-import { computed, ref, onUnmounted, onMounted } from "vue";
+import {
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	ChevronsRight,
+} from "lucide-vue-next";
+import { AnimatePresence, motion } from "motion-v";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { motion, AnimatePresence } from "motion-v";
+import { getFrontTrademarkListPage } from "@/api";
 import type { Category, Trademark } from "@/api/types";
 import { useCategoryStore } from "@/stores";
-import { getFrontTrademarkListPage } from "@/api";
 
 const router = useRouter();
 const categoryStore = useCategoryStore();
@@ -24,16 +29,18 @@ const isLoading = ref(false);
 
 // 当前页显示的品牌
 const quickNavs = computed(() => {
-  const start = (trademarkPage.value - 1) * trademarkPageSize;
-  const end = start + trademarkPageSize;
-  return allTrademarks.value.slice(start, end).map(tm => ({
-    id: tm._id || tm.id,
-    name: tm.name,
-  }));
+	const start = (trademarkPage.value - 1) * trademarkPageSize;
+	const end = start + trademarkPageSize;
+	return allTrademarks.value.slice(start, end).map((tm) => ({
+		id: tm._id || tm.id,
+		name: tm.name,
+	}));
 });
 
 // 总页数基于后端总数
-const trademarkTotalPages = computed(() => Math.ceil(backendTotal.value / trademarkPageSize));
+const trademarkTotalPages = computed(() =>
+	Math.ceil(backendTotal.value / trademarkPageSize),
+);
 const canPrev = computed(() => trademarkPage.value > 1);
 const canNext = computed(() => trademarkPage.value < trademarkTotalPages.value);
 
@@ -45,159 +52,165 @@ const SUB_MENU_DELAY = 100; // 二级菜单展开延迟(ms)
 
 // 获取品牌列表（按需加载）
 async function fetchTrademarkPage(page: number) {
-  if (isLoading.value) return;
-  isLoading.value = true;
-  try {
-    const res = await getFrontTrademarkListPage({ pageNo: page, pageSize: trademarkPageSize }) as any;
-    if (res) {
-      const list = res.trademarkList || res.data || [];
-      backendTotal.value = res.total || list.length;
-      // 追加到本地缓存
-      allTrademarks.value = [...allTrademarks.value, ...list];
-      backendPage.value = page;
-    }
-  } catch (error) {
-    console.error('获取品牌列表失败:', error);
-  } finally {
-    isLoading.value = false;
-  }
+	if (isLoading.value) return;
+	isLoading.value = true;
+	try {
+		const res = (await getFrontTrademarkListPage({
+			pageNo: page,
+			pageSize: trademarkPageSize,
+		})) as any;
+		if (res) {
+			const list = res.trademarkList || res.data || [];
+			backendTotal.value = res.total || list.length;
+			// 追加到本地缓存
+			allTrademarks.value = [...allTrademarks.value, ...list];
+			backendPage.value = page;
+		}
+	} catch (error) {
+		console.error("获取品牌列表失败:", error);
+	} finally {
+		isLoading.value = false;
+	}
 }
 
 // 初始化加载第一页
 async function initTrademarks() {
-  await fetchTrademarkPage(1);
+	await fetchTrademarkPage(1);
 }
 
 // 切换品牌页（懒加载）
 async function prevTrademarkPage() {
-  if (canPrev.value) {
-    trademarkPage.value--;
-  }
+	if (canPrev.value) {
+		trademarkPage.value--;
+	}
 }
 
 async function nextTrademarkPage() {
-  if (!canNext.value) return;
-  
-  const nextPage = trademarkPage.value + 1;
-  const requiredDataIndex = nextPage * trademarkPageSize;
-  
-  // 如果本地数据不足，先从后端获取下一页
-  if (allTrademarks.value.length < requiredDataIndex && backendPage.value < trademarkTotalPages.value) {
-    await fetchTrademarkPage(backendPage.value + 1);
-  }
-  
-  trademarkPage.value = nextPage;
+	if (!canNext.value) return;
+
+	const nextPage = trademarkPage.value + 1;
+	const requiredDataIndex = nextPage * trademarkPageSize;
+
+	// 如果本地数据不足，先从后端获取下一页
+	if (
+		allTrademarks.value.length < requiredDataIndex &&
+		backendPage.value < trademarkTotalPages.value
+	) {
+		await fetchTrademarkPage(backendPage.value + 1);
+	}
+
+	trademarkPage.value = nextPage;
 }
 
 // 组件挂载时获取品牌列表（分类数据已在Header中获取）
 onMounted(() => {
-  initTrademarks();
+	initTrademarks();
 });
 
 // 打开主下拉菜单(带防抖)
 function handleMainEnter() {
-  if (openDropdownTimer) {
-    clearTimeout(openDropdownTimer);
-  }
-  openDropdownTimer = setTimeout(() => {
-    hoverCategoryId.value = 'all';
-  }, OPEN_DELAY);
+	if (openDropdownTimer) {
+		clearTimeout(openDropdownTimer);
+	}
+	openDropdownTimer = setTimeout(() => {
+		hoverCategoryId.value = "all";
+	}, OPEN_DELAY);
 }
 
 // 关闭主下拉菜单
 function handleMainLeave() {
-  if (openDropdownTimer) {
-    clearTimeout(openDropdownTimer);
-    openDropdownTimer = null;
-  }
-  hoverCategoryId.value = null;
+	if (openDropdownTimer) {
+		clearTimeout(openDropdownTimer);
+		openDropdownTimer = null;
+	}
+	hoverCategoryId.value = null;
 }
 
 // 打开二级菜单(带防抖)
 function handleItemEnter(catId: string) {
-  if (openSubMenuTimer) {
-    clearTimeout(openSubMenuTimer);
-  }
-  openSubMenuTimer = setTimeout(() => {
-    hoverItemId.value = catId;
-  }, SUB_MENU_DELAY);
+	if (openSubMenuTimer) {
+		clearTimeout(openSubMenuTimer);
+	}
+	openSubMenuTimer = setTimeout(() => {
+		hoverItemId.value = catId;
+	}, SUB_MENU_DELAY);
 }
 
 // 关闭二级菜单
 function handleItemLeave() {
-  if (openSubMenuTimer) {
-    clearTimeout(openSubMenuTimer);
-    openSubMenuTimer = null;
-  }
-  hoverItemId.value = null;
+	if (openSubMenuTimer) {
+		clearTimeout(openSubMenuTimer);
+		openSubMenuTimer = null;
+	}
+	hoverItemId.value = null;
 }
 
 // 组件卸载时清理定时器
 onUnmounted(() => {
-  if (openDropdownTimer) {
-    clearTimeout(openDropdownTimer);
-  }
-  if (openSubMenuTimer) {
-    clearTimeout(openSubMenuTimer);
-  }
+	if (openDropdownTimer) {
+		clearTimeout(openDropdownTimer);
+	}
+	if (openSubMenuTimer) {
+		clearTimeout(openSubMenuTimer);
+	}
 });
 
 // 动画配置
 const dropdownVariants = {
-  hidden: {
-    opacity: 0,
-    y: -10,
-    scale: 0.95
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 25,
-      mass: 0.8
-    }
-  },
-  exit: {
-    opacity: 0,
-    y: -5,
-    scale: 0.98,
-    transition: {
-      duration: 0.15
-    }
-  }
-}
+	hidden: {
+		opacity: 0,
+		y: -10,
+		scale: 0.95,
+	},
+	visible: {
+		opacity: 1,
+		y: 0,
+		scale: 1,
+		transition: {
+			type: "spring" as const,
+			stiffness: 300,
+			damping: 25,
+			mass: 0.8,
+		},
+	},
+	exit: {
+		opacity: 0,
+		y: -5,
+		scale: 0.98,
+		transition: {
+			duration: 0.15,
+		},
+	},
+};
 
 const subMenuVariants = {
-  hidden: {
-    opacity: 0,
-    x: -10,
-    scale: 0.95
-  },
-  visible: {
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    transition: {
-      type: "spring" as const,
-      stiffness: 400,
-      damping: 30
-    }
-  },
-  exit: {
-    opacity: 0,
-    x: -5,
-    transition: {
-      duration: 0.1
-    }
-  }
-}
+	hidden: {
+		opacity: 0,
+		x: -10,
+		scale: 0.95,
+	},
+	visible: {
+		opacity: 1,
+		x: 0,
+		scale: 1,
+		transition: {
+			type: "spring" as const,
+			stiffness: 400,
+			damping: 30,
+		},
+	},
+	exit: {
+		opacity: 0,
+		x: -5,
+		transition: {
+			duration: 0.1,
+		},
+	},
+};
 
 // 跳转分类搜索
 function goToCategory(category: Category, _level: number) {
-	router.push({ path: '/search', query: { keyword: category.name } })
+	router.push({ path: "/search", query: { keyword: category.name } });
 }
 </script>
 

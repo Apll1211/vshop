@@ -1,17 +1,17 @@
-import './assets/fonts/dingtalk-jinbuti.css'
-import 'ant-design-vue/dist/reset.css'
-import './assets/main.css'
+import "./assets/fonts/dingtalk-jinbuti.css";
+import "ant-design-vue/dist/reset.css";
+import "./assets/main.css";
 
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import pinia from './stores'
-import Antd from 'ant-design-vue'
+import Antd from "ant-design-vue";
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
+import pinia from "./stores";
 
-const app = createApp(App)
+const app = createApp(App);
 
-app.use(pinia)
-app.use(router)
-app.use(Antd)
+app.use(pinia);
+app.use(router);
+app.use(Antd);
 
-app.mount('#app')
+app.mount("#app");

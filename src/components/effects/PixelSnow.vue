@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import {
-  Color,
-  Mesh,
-  OrthographicCamera,
-  PlaneGeometry,
-  Scene,
-  ShaderMaterial,
-  Vector2,
-  Vector3,
-  WebGLRenderer
-} from 'three';
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch, type CSSProperties } from 'vue';
+	Color,
+	Mesh,
+	OrthographicCamera,
+	PlaneGeometry,
+	Scene,
+	ShaderMaterial,
+	Vector2,
+	Vector3,
+	WebGLRenderer,
+} from "three";
+import {
+	type CSSProperties,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	useTemplateRef,
+	watch,
+} from "vue";
 
 const vertexShader = `
 void main() {
@@ -134,141 +141,150 @@ void main() {
 `;
 
 interface PixelSnowProps {
-  color?: string;
-  flakeSize?: number;
-  minFlakeSize?: number;
-  pixelResolution?: number;
-  speed?: number;
-  depthFade?: number;
-  farPlane?: number;
-  brightness?: number;
-  gamma?: number;
-  density?: number;
-  variant?: 'square' | 'round' | 'snowflake';
-  direction?: number;
-  className?: string;
-  style?: CSSProperties;
+	color?: string;
+	flakeSize?: number;
+	minFlakeSize?: number;
+	pixelResolution?: number;
+	speed?: number;
+	depthFade?: number;
+	farPlane?: number;
+	brightness?: number;
+	gamma?: number;
+	density?: number;
+	variant?: "square" | "round" | "snowflake";
+	direction?: number;
+	className?: string;
+	style?: CSSProperties;
 }
 
 const props = withDefaults(defineProps<PixelSnowProps>(), {
-  color: '#ffffff',
-  flakeSize: 0.01,
-  minFlakeSize: 1.25,
-  pixelResolution: 200,
-  speed: 1.25,
-  depthFade: 8,
-  farPlane: 20,
-  brightness: 1,
-  gamma: 0.4545,
-  density: 0.3,
-  variant: 'square',
-  direction: 125,
-  className: '',
-  style: () => ({})
+	color: "#ffffff",
+	flakeSize: 0.01,
+	minFlakeSize: 1.25,
+	pixelResolution: 200,
+	speed: 1.25,
+	depthFade: 8,
+	farPlane: 20,
+	brightness: 1,
+	gamma: 0.4545,
+	density: 0.3,
+	variant: "square",
+	direction: 125,
+	className: "",
+	style: () => ({}),
 });
 
-const containerRef = useTemplateRef<HTMLDivElement>('containerRef');
+const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
 const animationRef = ref<number>(0);
 
 let cleanupFn: (() => void) | null = null;
 const setupFn = () => {
-  const container = containerRef.value;
-  if (!container) return;
+	const container = containerRef.value;
+	if (!container) return;
 
-  const scene = new Scene();
-  const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-  const renderer = new WebGLRenderer({
-    antialias: false,
-    alpha: true,
-    premultipliedAlpha: false,
-    powerPreference: 'high-performance'
-  });
+	const scene = new Scene();
+	const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+	const renderer = new WebGLRenderer({
+		antialias: false,
+		alpha: true,
+		premultipliedAlpha: false,
+		powerPreference: "high-performance",
+	});
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(container.offsetWidth, container.offsetHeight);
-  renderer.setClearColor(0x000000, 0);
-  container.appendChild(renderer.domElement);
+	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+	renderer.setSize(container.offsetWidth, container.offsetHeight);
+	renderer.setClearColor(0x000000, 0);
+	container.appendChild(renderer.domElement);
 
-  const threeColor = new Color(props.color);
-  const material = new ShaderMaterial({
-    vertexShader,
-    fragmentShader,
-    uniforms: {
-      uTime: { value: 0 },
-      uResolution: { value: new Vector2(container.offsetWidth, container.offsetHeight) },
-      uFlakeSize: { value: props.flakeSize },
-      uMinFlakeSize: { value: props.minFlakeSize },
-      uPixelResolution: { value: props.pixelResolution },
-      uSpeed: { value: props.speed },
-      uDepthFade: { value: props.depthFade },
-      uFarPlane: { value: props.farPlane },
-      uColor: { value: new Vector3(threeColor.r, threeColor.g, threeColor.b) },
-      uBrightness: { value: props.brightness },
-      uGamma: { value: props.gamma },
-      uDensity: { value: props.density },
-      uVariant: { value: props.variant === 'round' ? 1.0 : props.variant === 'snowflake' ? 2.0 : 0.0 },
-      uDirection: { value: (props.direction * Math.PI) / 180 }
-    },
-    transparent: true
-  });
+	const threeColor = new Color(props.color);
+	const material = new ShaderMaterial({
+		vertexShader,
+		fragmentShader,
+		uniforms: {
+			uTime: { value: 0 },
+			uResolution: {
+				value: new Vector2(container.offsetWidth, container.offsetHeight),
+			},
+			uFlakeSize: { value: props.flakeSize },
+			uMinFlakeSize: { value: props.minFlakeSize },
+			uPixelResolution: { value: props.pixelResolution },
+			uSpeed: { value: props.speed },
+			uDepthFade: { value: props.depthFade },
+			uFarPlane: { value: props.farPlane },
+			uColor: { value: new Vector3(threeColor.r, threeColor.g, threeColor.b) },
+			uBrightness: { value: props.brightness },
+			uGamma: { value: props.gamma },
+			uDensity: { value: props.density },
+			uVariant: {
+				value:
+					props.variant === "round"
+						? 1.0
+						: props.variant === "snowflake"
+							? 2.0
+							: 0.0,
+			},
+			uDirection: { value: (props.direction * Math.PI) / 180 },
+		},
+		transparent: true,
+	});
 
-  const geometry = new PlaneGeometry(2, 2);
-  scene.add(new Mesh(geometry, material));
+	const geometry = new PlaneGeometry(2, 2);
+	scene.add(new Mesh(geometry, material));
 
-  const handleResize = () => {
-    const w = container.offsetWidth,
-      h = container.offsetHeight;
-    renderer.setSize(w, h);
-    material.uniforms.uResolution.value.set(w, h);
-  };
-  window.addEventListener('resize', handleResize);
+	const handleResize = () => {
+		const w = container.offsetWidth,
+			h = container.offsetHeight;
+		renderer.setSize(w, h);
+		material.uniforms.uResolution.value.set(w, h);
+	};
+	window.addEventListener("resize", handleResize);
 
-  const startTime = performance.now();
-  const animate = () => {
-    animationRef.value = requestAnimationFrame(animate);
-    material.uniforms.uTime.value = (performance.now() - startTime) * 0.001;
-    renderer.render(scene, camera);
-  };
-  animate();
+	const startTime = performance.now();
+	const animate = () => {
+		animationRef.value = requestAnimationFrame(animate);
+		material.uniforms.uTime.value = (performance.now() - startTime) * 0.001;
+		renderer.render(scene, camera);
+	};
+	animate();
 
-  cleanupFn = () => {
-    cancelAnimationFrame(animationRef.value);
-    window.removeEventListener('resize', handleResize);
-    container.removeChild(renderer.domElement);
-    renderer.dispose();
-    geometry.dispose();
-    material.dispose();
-  };
+	cleanupFn = () => {
+		cancelAnimationFrame(animationRef.value);
+		window.removeEventListener("resize", handleResize);
+		container.removeChild(renderer.domElement);
+		renderer.dispose();
+		geometry.dispose();
+		material.dispose();
+	};
 };
 
 onMounted(() => {
-  setupFn();
+	setupFn();
 });
 
 onBeforeUnmount(() => {
-  cleanupFn?.();
+	cleanupFn?.();
 });
 
 watch(
-  () => [
-    props.color,
-    props.flakeSize,
-    props.minFlakeSize,
-    props.pixelResolution,
-    props.speed,
-    props.depthFade,
-    props.farPlane,
-    props.brightness,
-    props.gamma,
-    props.density,
-    props.variant,
-    props.direction
-  ],
-  () => {
-    cleanupFn?.();
-    setupFn();
-  },
-  { deep: true }
+	() => [
+		props.color,
+		props.flakeSize,
+		props.minFlakeSize,
+		props.pixelResolution,
+		props.speed,
+		props.depthFade,
+		props.farPlane,
+		props.brightness,
+		props.gamma,
+		props.density,
+		props.variant,
+		props.direction,
+	],
+	() => {
+		cleanupFn?.();
+		setupFn();
+	},
+	{ deep: true },
 );
 </script>
 

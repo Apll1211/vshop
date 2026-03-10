@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { CheckCircle2, Home, Package, ArrowRight } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle2, Home, Package } from "lucide-vue-next";
+import { onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const orderId = route.params.orderId as string
+const orderId = route.params.orderId as string;
 
 const goHome = () => {
-  router.push('/')
-}
+	router.push("/");
+};
 
 const goOrders = () => {
-  router.push({ name: 'orders' })
-}
+	router.push({ name: "orders" });
+};
 </script>
 
 <template>

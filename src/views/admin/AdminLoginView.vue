@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAdminStore } from '@/stores/admin';
-import { LockOutlined, UserOutlined } from '@ant-design/icons-vue';
-import { message } from 'ant-design-vue';
+import { LockOutlined, UserOutlined } from "@ant-design/icons-vue";
+import { message } from "ant-design-vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAdminStore } from "@/stores/admin";
 
 const router = useRouter();
 const adminStore = useAdminStore();
 
 const formState = ref({
-  adminName: '',
-  password: '',
+	adminName: "",
+	password: "",
 });
 
 const loading = ref(false);
 
 const handleSubmit = async () => {
-  console.log('表单提交:', formState.value);
-  
-  if (!formState.value.adminName || !formState.value.password) {
-    message.warning('请输入用户名和密码');
-    return;
-  }
+	console.log("表单提交:", formState.value);
 
-  loading.value = true;
-  try {
-    console.log('开始登录...');
-    const result = await adminStore.login(formState.value);
-    console.log('登录结果:', result);
-    if (result.success) {
-      message.success('登录成功');
-      router.push('/admin');
-    } else {
-      message.error(result.message || '登录失败');
-    }
-  } catch (error) {
-    console.error('登录错误:', error);
-    message.error('登录失败，请稍后重试');
-  } finally {
-    loading.value = false;
-  }
+	if (!formState.value.adminName || !formState.value.password) {
+		message.warning("请输入用户名和密码");
+		return;
+	}
+
+	loading.value = true;
+	try {
+		console.log("开始登录...");
+		const result = await adminStore.login(formState.value);
+		console.log("登录结果:", result);
+		if (result.success) {
+			message.success("登录成功");
+			router.push("/admin");
+		} else {
+			message.error(result.message || "登录失败");
+		}
+	} catch (error) {
+		console.error("登录错误:", error);
+		message.error("登录失败，请稍后重试");
+	} finally {
+		loading.value = false;
+	}
 };
 </script>
 

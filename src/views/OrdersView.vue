@@ -1,86 +1,97 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Package,
-  Clock,
-  CheckCircle2,
-  Truck,
-  AlertCircle,
-  ShoppingBag,
-} from 'lucide-vue-next'
-import { getMyOrderList } from '@/api'
-import { useUserStore } from '@/stores/user'
-import type { Order } from '@/api/types'
+	AlertCircle,
+	CheckCircle2,
+	Clock,
+	Package,
+	ShoppingBag,
+	Truck,
+} from "lucide-vue-next";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { getMyOrderList } from "@/api";
+import type { Order } from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUserStore } from "@/stores/user";
 
-const router = useRouter()
-const userStore = useUserStore()
+const router = useRouter();
+const userStore = useUserStore();
 
-const orders = ref<Order[]>([])
-const loading = ref(true)
-const currentStatus = ref('all')
+const orders = ref<Order[]>([]);
+const loading = ref(true);
+const currentStatus = ref("all");
 
 const formatPrice = (price: string | number) => {
-  const p = typeof price === 'string' ? parseFloat(price) : price
-  return (p / 100).toFixed(2)
-}
+	const p = typeof price === "string" ? parseFloat(price) : price;
+	return (p / 100).toFixed(2);
+};
 
 const getStatusBadge = (order: Order) => {
-  if (order.orderStatus === 'UNPAID') {
-    return { variant: 'outline' as const, text: '待支付', class: 'border-amber-500 text-amber-600' }
-  } else if (order.orderStatus === 'PAID') {
-    return { variant: 'default' as const, text: '已支付', class: '' }
-  } else if (order.orderStatus === 'SHIPPED') {
-    return { variant: 'secondary' as const, text: '已发货', class: '' }
-  } else if (order.orderStatus === 'COMPLETED') {
-    return { variant: 'outline' as const, text: '已完成', class: 'border-emerald-500 text-emerald-600' }
-  } else if (order.orderStatus === 'CANCELLED') {
-    return { variant: 'destructive' as const, text: '已取消', class: '' }
-  }
-  return { variant: 'outline' as const, text: '未知', class: '' }
-}
+	if (order.orderStatus === "UNPAID") {
+		return {
+			variant: "outline" as const,
+			text: "待支付",
+			class: "border-amber-500 text-amber-600",
+		};
+	} else if (order.orderStatus === "PAID") {
+		return { variant: "default" as const, text: "已支付", class: "" };
+	} else if (order.orderStatus === "SHIPPED") {
+		return { variant: "secondary" as const, text: "已发货", class: "" };
+	} else if (order.orderStatus === "COMPLETED") {
+		return {
+			variant: "outline" as const,
+			text: "已完成",
+			class: "border-emerald-500 text-emerald-600",
+		};
+	} else if (order.orderStatus === "CANCELLED") {
+		return { variant: "destructive" as const, text: "已取消", class: "" };
+	}
+	return { variant: "outline" as const, text: "未知", class: "" };
+};
 
 const fetchOrders = async () => {
-  try {
-    loading.value = true
-    const res = await getMyOrderList(1, 100)
-    if (res && res.code === 200) {
-      orders.value = res.orderList || (res.data as any)?.records || []
-    }
-  } catch (error) {
-    console.error('获取订单列表失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
+	try {
+		loading.value = true;
+		const res = await getMyOrderList(1, 100);
+		if (res && res.code === 200) {
+			orders.value = res.orderList || (res.data as any)?.records || [];
+		}
+	} catch (error) {
+		console.error("获取订单列表失败:", error);
+	} finally {
+		loading.value = false;
+	}
+};
 
 const handlePay = (orderId: string) => {
-  router.push({ name: 'pay', params: { orderId } })
-}
+	router.push({ name: "pay", params: { orderId } });
+};
 
 const handleViewDetail = (orderId: string) => {
-  router.push({ name: 'order-detail', params: { orderId } })
-}
+	router.push({ name: "order-detail", params: { orderId } });
+};
 
 const filteredOrders = computed(() => {
-  if (currentStatus.value === 'all') return orders.value
-  if (currentStatus.value === 'unpaid') return orders.value.filter(o => o.orderStatus === 'UNPAID')
-  if (currentStatus.value === 'shipped') return orders.value.filter(o => o.orderStatus === 'SHIPPED')
-  if (currentStatus.value === 'completed') return orders.value.filter(o => o.orderStatus === 'COMPLETED')
-  return orders.value
-})
+	if (currentStatus.value === "all") return orders.value;
+	if (currentStatus.value === "unpaid")
+		return orders.value.filter((o) => o.orderStatus === "UNPAID");
+	if (currentStatus.value === "shipped")
+		return orders.value.filter((o) => o.orderStatus === "SHIPPED");
+	if (currentStatus.value === "completed")
+		return orders.value.filter((o) => o.orderStatus === "COMPLETED");
+	return orders.value;
+});
 
 onMounted(() => {
-  if (!userStore.isLoggedIn) {
-    router.push({ name: 'login', query: { redirect: '/orders' } })
-    return
-  }
-  fetchOrders()
-})
+	if (!userStore.isLoggedIn) {
+		router.push({ name: "login", query: { redirect: "/orders" } });
+		return;
+	}
+	fetchOrders();
+});
 </script>
 
 <template>

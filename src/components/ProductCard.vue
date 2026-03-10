@@ -1,31 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { motion } from 'motion-v'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import type { ProductInfo } from '@/api/types'
+import { motion } from "motion-v";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import type { ProductInfo } from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 const props = defineProps<{
-  product: ProductInfo
-}>()
+	product: ProductInfo;
+}>();
 
-const router = useRouter()
+const router = useRouter();
 
 // 计算折扣显示
 const discountDisplay = computed(() => {
-  if (props.product.originalPrice && props.product.originalPrice > props.product.price) {
-    const discount = props.product.price / props.product.originalPrice
-    if (discount < 1) {
-      return `${Math.round(discount * 10)}折`
-    }
-  }
-  return null
-})
+	if (
+		props.product.originalPrice &&
+		props.product.originalPrice > props.product.price
+	) {
+		const discount = props.product.price / props.product.originalPrice;
+		if (discount < 1) {
+			return `${Math.round(discount * 10)}折`;
+		}
+	}
+	return null;
+});
 
 // 跳转到商品详情
 function goToDetail() {
-  router.push(`/product/${props.product.id}`)
+	router.push(`/product/${props.product.id}`);
 }
 </script>
 

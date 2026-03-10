@@ -82,10 +82,10 @@ const handleSubmit = async () => {
 			addressId: selectedAddressId.value,
 			skuInfoList,
 			paymentMethod: paymentMethod.value,
-      consignee: selectedAddress.value?.consignee || '',
-      consigneeTel: selectedAddress.value?.phone || '',
-      deliveryAddress: selectedAddress.value?.detailAddress || '',
-      paymentWay: paymentMethod.value === 1 ? '支付宝' : '微信'
+			consignee: selectedAddress.value?.consignee || "",
+			consigneeTel: selectedAddress.value?.phone || "",
+			deliveryAddress: selectedAddress.value?.detailAddress || "",
+			paymentWay: paymentMethod.value === 1 ? "支付宝" : "微信",
 		})) as any;
 
 		if (res && res.code === 200) {
@@ -95,8 +95,8 @@ const handleSubmit = async () => {
 				params: { orderId: res.data || res.orderId },
 			});
 		} else {
-      toast.error(res.message || "订单提交失败");
-    }
+			toast.error(res.message || "订单提交失败");
+		}
 	} catch (error: any) {
 		toast.error(error.message || "订单提交失败");
 	} finally {

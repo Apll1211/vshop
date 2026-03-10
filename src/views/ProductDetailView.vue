@@ -1,158 +1,164 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel'
+	ChevronRight,
+	Heart,
+	Minus,
+	Plus,
+	RotateCcw,
+	Share2,
+	ShieldCheck,
+	ShoppingCart,
+	Truck,
+} from "lucide-vue-next";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
+import { addCollect, cancelCollect, getProductDetail } from "@/api";
+import type { ProductDetail, SkuInfo, SpuSaleAttr } from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Heart,
-  ShoppingCart,
-  Share2,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  Minus,
-  Plus,
-  ChevronRight,
-} from 'lucide-vue-next'
-import { getProductDetail, addCollect, cancelCollect } from '@/api'
-import { useCartStore } from '@/stores/cart'
-import { useUserStore } from '@/stores/user'
-import { toast } from 'vue-sonner'
-import type { SkuInfo, SpuSaleAttr, ProductDetail } from '@/api/types'
+	Carousel,
+	CarouselContent,
+	CarouselItem,
+	CarouselNext,
+	CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCartStore } from "@/stores/cart";
+import { useUserStore } from "@/stores/user";
 
-const route = useRoute()
-const router = useRouter()
-const cartStore = useCartStore()
-const userStore = useUserStore()
+const route = useRoute();
+const router = useRouter();
+const cartStore = useCartStore();
+const userStore = useUserStore();
 
-const product = ref<ProductDetail | null>(null)
-const loading = ref(true)
-const quantity = ref(1)
-const currentImageIndex = ref(0)
-const selectedAttrs = ref<Record<string, string>>({})
-const isFavorite = ref(false)
+const product = ref<ProductDetail | null>(null);
+const loading = ref(true);
+const quantity = ref(1);
+const currentImageIndex = ref(0);
+const selectedAttrs = ref<Record<string, string>>({});
+const isFavorite = ref(false);
 
-const skuInfo = computed<SkuInfo | any>(() => product.value?.skuInfo || null)
-const spuSaleAttrList = computed<SpuSaleAttr[]>(() => product.value?.spuSaleAttrList || [])
+const skuInfo = computed<SkuInfo | any>(() => product.value?.skuInfo || null);
+const spuSaleAttrList = computed<SpuSaleAttr[]>(
+	() => product.value?.spuSaleAttrList || [],
+);
 const images = computed(() => {
-  if (!skuInfo.value?.skuImageList) return []
-  return skuInfo.value.skuImageList
-})
+	if (!skuInfo.value?.skuImageList) return [];
+	return skuInfo.value.skuImageList;
+});
 const currentPrice = computed(() => {
-  return product.value?.price || '0'
-})
+	return product.value?.price || "0";
+});
 
 const formatPrice = (price: string | number) => {
-  const p = typeof price === 'string' ? parseFloat(price) : price
-  return (p / 100).toFixed(2)
-}
+	const p = typeof price === "string" ? parseFloat(price) : price;
+	return (p / 100).toFixed(2);
+};
 
 onMounted(async () => {
-  const id = route.params.id as string
-  if (!id) return
-  
-  try {
-    const res = await getProductDetail(id)
-    if (res) {
-      product.value = res as any
-      // 初始化选中属性
-      if (spuSaleAttrList.value.length > 0) {
-        spuSaleAttrList.value.forEach(attr => {
-          if (attr.spuSaleAttrValueList && attr.spuSaleAttrValueList.length > 0) {
-            selectedAttrs.value[attr.saleAttrName] = attr.spuSaleAttrValueList[0]?.saleAttrValueName || ''
-          }
-        })
-      }
-    }
-  } catch (error) {
-    console.error('加载商品详情失败:', error)
-    toast.error('加载商品详情失败')
-  } finally {
-    loading.value = false
-  }
-})
+	const id = route.params.id as string;
+	if (!id) return;
+
+	try {
+		const res = await getProductDetail(id);
+		if (res) {
+			product.value = res as any;
+			// 初始化选中属性
+			if (spuSaleAttrList.value.length > 0) {
+				spuSaleAttrList.value.forEach((attr) => {
+					if (
+						attr.spuSaleAttrValueList &&
+						attr.spuSaleAttrValueList.length > 0
+					) {
+						selectedAttrs.value[attr.saleAttrName] =
+							attr.spuSaleAttrValueList[0]?.saleAttrValueName || "";
+					}
+				});
+			}
+		}
+	} catch (error) {
+		console.error("加载商品详情失败:", error);
+		toast.error("加载商品详情失败");
+	} finally {
+		loading.value = false;
+	}
+});
 
 const selectAttr = (attrName: string, valueName: string) => {
-  selectedAttrs.value[attrName] = valueName
-}
+	selectedAttrs.value[attrName] = valueName;
+};
 
 const isSelected = (attrName: string, valueName: string) => {
-  return selectedAttrs.value[attrName] === valueName
-}
+	return selectedAttrs.value[attrName] === valueName;
+};
 
 const increaseQty = () => {
-  if (quantity.value < 99) quantity.value++
-}
+	if (quantity.value < 99) quantity.value++;
+};
 
 const decreaseQty = () => {
-  if (quantity.value > 1) quantity.value--
-}
+	if (quantity.value > 1) quantity.value--;
+};
 
 const addToCart = async () => {
-  if (!skuInfo.value) return
-  
-  try {
-    await cartStore.addToCartAction(skuInfo.value.id, quantity.value)
-    toast.success('已添加到购物车')
-  } catch (error) {
-    toast.error('添加失败，请重试')
-  }
-}
+	if (!skuInfo.value) return;
+
+	try {
+		await cartStore.addToCartAction(skuInfo.value.id, quantity.value);
+		toast.success("已添加到购物车");
+	} catch (error) {
+		toast.error("添加失败，请重试");
+	}
+};
 
 const buyNow = async () => {
-  if (!userStore.isLoggedIn) {
-    toast.error('请先登录')
-    router.push({ name: 'login', query: { redirect: route.fullPath } })
-    return
-  }
-  
-  await addToCart()
-  router.push({ name: 'checkout' })
-}
+	if (!userStore.isLoggedIn) {
+		toast.error("请先登录");
+		router.push({ name: "login", query: { redirect: route.fullPath } });
+		return;
+	}
+
+	await addToCart();
+	router.push({ name: "checkout" });
+};
 
 const toggleFavorite = async () => {
-  if (!userStore.isLoggedIn) {
-    toast.error('请先登录')
-    return
-  }
-  
-  if (!skuInfo.value) return
-  
-  try {
-    if (isFavorite.value) {
-      await cancelCollect(skuInfo.value.id)
-      isFavorite.value = false
-      toast.success('已取消收藏')
-    } else {
-      await addCollect(skuInfo.value.id)
-      isFavorite.value = true
-      toast.success('已添加收藏')
-    }
-  } catch (error) {
-    toast.error('操作失败')
-  }
-}
+	if (!userStore.isLoggedIn) {
+		toast.error("请先登录");
+		return;
+	}
+
+	if (!skuInfo.value) return;
+
+	try {
+		if (isFavorite.value) {
+			await cancelCollect(skuInfo.value.id);
+			isFavorite.value = false;
+			toast.success("已取消收藏");
+		} else {
+			await addCollect(skuInfo.value.id);
+			isFavorite.value = true;
+			toast.success("已添加收藏");
+		}
+	} catch (error) {
+		toast.error("操作失败");
+	}
+};
 
 const shareProduct = () => {
-  if (navigator.share) {
-    navigator.share({
-      title: skuInfo.value?.skuName || '商品详情',
-      url: window.location.href,
-    })
-  } else {
-    navigator.clipboard.writeText(window.location.href)
-    toast.success('链接已复制到剪贴板')
-  }
-}
+	if (navigator.share) {
+		navigator.share({
+			title: skuInfo.value?.skuName || "商品详情",
+			url: window.location.href,
+		});
+	} else {
+		navigator.clipboard.writeText(window.location.href);
+		toast.success("链接已复制到剪贴板");
+	}
+};
 </script>
 
 <template>

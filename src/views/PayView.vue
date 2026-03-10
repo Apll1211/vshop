@@ -1,79 +1,82 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
-  CreditCard,
-  Wallet,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  ArrowLeft,
-} from 'lucide-vue-next'
-import { getOrderDetail, payOrder } from '@/api'
-import { toast } from 'vue-sonner'
-import type { Order } from '@/api/types'
+	AlertCircle,
+	ArrowLeft,
+	CheckCircle2,
+	Clock,
+	CreditCard,
+	Wallet,
+} from "lucide-vue-next";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
+import { getOrderDetail, payOrder } from "@/api";
+import type { Order } from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const order = ref<Order | null>(null)
-const loading = ref(true)
-const paying = ref(false)
-const paymentMethod = ref(1)
+const order = ref<Order | null>(null);
+const loading = ref(true);
+const paying = ref(false);
+const paymentMethod = ref(1);
 
 const formatPrice = (price: string | number) => {
-  const p = typeof price === 'string' ? parseFloat(price) : price
-  return (p / 100).toFixed(2)
-}
+	const p = typeof price === "string" ? parseFloat(price) : price;
+	return (p / 100).toFixed(2);
+};
 
-const orderId = computed(() => route.params.orderId as string)
+const orderId = computed(() => route.params.orderId as string);
 
 const fetchOrder = async () => {
-  if (!orderId.value) return
-  
-  try {
-    loading.value = true
-    const res = await getOrderDetail(orderId.value)
-    if (res && res.code === 200) {
-      order.value = res.data || (res as any).order
-    }
-  } catch (error) {
-    console.error('获取订单失败:', error)
-    toast.error('获取订单信息失败')
-  } finally {
-    loading.value = false
-  }
-}
+	if (!orderId.value) return;
+
+	try {
+		loading.value = true;
+		const res = await getOrderDetail(orderId.value);
+		if (res && res.code === 200) {
+			order.value = res.data || (res as any).order;
+		}
+	} catch (error) {
+		console.error("获取订单失败:", error);
+		toast.error("获取订单信息失败");
+	} finally {
+		loading.value = false;
+	}
+};
 
 const handlePay = async () => {
-  if (!order.value) return
-  
-  paying.value = true
-  try {
-    const res = await payOrder(order.value._id, paymentMethod.value)
-    if (res.code === 200) {
-      toast.success('支付成功')
-      router.push({ name: 'pay-success', params: { orderId: order.value._id } })
-    } else {
-      toast.error(res.message || '支付失败')
-    }
-  } catch (error: any) {
-    toast.error(error.message || '支付失败')
-  } finally {
-    paying.value = false
-  }
-}
+	if (!order.value) return;
+
+	paying.value = true;
+	try {
+		const res = await payOrder(order.value._id, paymentMethod.value);
+		if (res.code === 200) {
+			toast.success("支付成功");
+			router.push({
+				name: "pay-success",
+				params: { orderId: order.value._id },
+			});
+		} else {
+			toast.error(res.message || "支付失败");
+		}
+	} catch (error: any) {
+		toast.error(error.message || "支付失败");
+	} finally {
+		paying.value = false;
+	}
+};
 
 const goBack = () => {
-  router.push({ name: 'orders' })
-}
+	router.push({ name: "orders" });
+};
 
 onMounted(() => {
-  fetchOrder()
-})
+	fetchOrder();
+});
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import MetallicPaint from './effects/MetallicPaint.vue';
-import logoM from '@/assets/logo-m.svg';
+import logoM from "@/assets/logo-m.svg";
+import MetallicPaint from "./effects/MetallicPaint.vue";
 </script>
 
 <template>
