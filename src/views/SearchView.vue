@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-	ChevronLeft,
-	ChevronRight,
-	Grid3X3,
-	List,
-	Package,
-	Search,
-} from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, Grid3X3, List, Package, Search } from "lucide-vue-next";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";

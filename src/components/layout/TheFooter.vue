@@ -13,7 +13,7 @@ const currentYear = new Date().getFullYear();
         <!-- 公司信息 -->
         <div class="space-y-4">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div class="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
               <span class="text-white font-bold text-xl">Z</span>
             </div>
             <div>

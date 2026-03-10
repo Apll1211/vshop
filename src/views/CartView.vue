@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-	ArrowRight,
-	Minus,
-	Plus,
-	ShoppingBag,
-	ShoppingCart,
-	Trash2,
-} from "lucide-vue-next";
+import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from "lucide-vue-next";
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
@@ -139,7 +132,7 @@ const goShopping = () => {
                     <div class="flex gap-4">
                       <router-link
                         :to="{ name: 'product-detail', params: { id: item.skuId } }"
-                        class="w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0"
+                        class="w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 shrink-0"
                       >
                         <img
                           :src="getFileUrl(item.imgUrl)"
@@ -266,7 +259,7 @@ const goShopping = () => {
               </div>
 
               <Button
-                class="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
+                class="w-full bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
                 size="lg"
                 @click="goCheckout"
                 :disabled="cartStore.checkedCount === 0"

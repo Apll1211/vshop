@@ -1,11 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { getUserInfo, login, logout, register } from "@/api";
-import type {
-	UserInfo,
-	UserLoginParams,
-	UserRegisterParams,
-} from "@/api/types";
+import type { UserInfo, UserLoginParams, UserRegisterParams } from "@/api/types";
 
 export const useUserStore = defineStore(
 	"user",
@@ -23,7 +19,7 @@ export const useUserStore = defineStore(
 				// 兼容 token 在根路径或 data 路径
 				const loginData = res.data || res;
 				const loginToken = res.token || (res.data && res.data.token);
-				
+
 				if (loginToken) {
 					token.value = loginToken;
 					userInfo.value = loginData as UserInfo;

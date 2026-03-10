@@ -7,15 +7,9 @@ import {
 } from "@ant-design/icons-vue";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { onMounted, ref } from "vue";
-import {
-	getAdminOrderList,
-	getAdvList,
-	getDashboardStats,
-	getShopList,
-	getSpuList,
-} from "@/api";
+import { getAdminOrderList, getAdvList, getDashboardStats, getShopList, getSpuList } from "@/api";
 import { getFileUrl } from "@/api/request";
-import { useAdminStore } from "@/stores/admin";
+import { useAdminStore } from "@/stores";
 
 const adminStore = useAdminStore();
 const breakpoints = useBreakpoints(breakpointsTailwind);
@@ -66,46 +60,37 @@ const fetchData = async () => {
 
 		if (spuRes) {
 			const d = spuRes as any;
-			stats.value[0].value = String(
-				d.count || d.total || d.data?.count || d.data?.total || 0,
-			);
+			stats.value[0].value = String(d.count || d.total || d.data?.count || d.data?.total || 0);
 		}
 		if (orderRes) {
 			const d = orderRes as any;
-			stats.value[1].value = String(
-				d.count || d.total || d.data?.count || d.data?.total || 0,
-			);
+			stats.value[1].value = String(d.count || d.total || d.data?.count || d.data?.total || 0);
 		}
 		if (shopRes) {
 			const d = shopRes as any;
-			const list =
-				d.shopList || d.data?.shopList || (Array.isArray(d) ? d : []);
+			const list = d.shopList || d.data?.shopList || (Array.isArray(d) ? d : []);
 			stats.value[2].value = String(list.length || 0);
 		}
 		if (advRes) {
 			const d = advRes as any;
-			stats.value[3].value = String(
-				d.total || d.count || d.data?.total || d.data?.count || 0,
-			);
+			stats.value[3].value = String(d.total || d.count || d.data?.total || d.data?.count || 0);
 		}
 
 		try {
 			const statsRes: any = await getDashboardStats();
-			if (statsRes && (statsRes.code === 200 || statsRes.ok === 1)) {
-				if (statsRes.productCount !== undefined)
-					stats.value[0].value = String(statsRes.productCount);
-				if (statsRes.orderCount !== undefined)
-					stats.value[1].value = String(statsRes.orderCount);
-				if (statsRes.shopCount !== undefined)
-					stats.value[2].value = String(statsRes.shopCount);
-				if (statsRes.advCount !== undefined)
-					stats.value[3].value = String(statsRes.advCount);
+			if (statsRes) {
+				// 拦截器已处理，直接访问属性
+				const s = statsRes.data || statsRes;
+				if (s.productCount !== undefined) stats.value[0].value = String(s.productCount);
+				if (s.orderCount !== undefined) stats.value[1].value = String(s.orderCount);
+				if (s.shopCount !== undefined) stats.value[2].value = String(s.shopCount);
+				if (s.advCount !== undefined) stats.value[3].value = String(s.advCount);
 			}
 		} catch (e) {
 			// ignore
 		}
 	} catch (error) {
-		console.log("统计数据加载受限");
+		// 捕获异常
 	} finally {
 		loading.value = false;
 	}
@@ -117,18 +102,13 @@ onMounted(async () => {
 
 	// 2. 加载统计数据
 	await fetchData();
-
-	// 3. 调试输出：确认 Store 中的真实数据
-	console.log("[工作台] 当前用户信息:", adminStore.user);
-	console.log("[工作台] 头像原始路径:", adminStore.user?.avatar);
-	console.log("[工作台] 头像处理路径:", getFileUrl(adminStore.user?.avatar));
 });
 </script>
 
 <template>
   <div class="space-y-4 md:space-y-6 pb-10">
     <!-- 欢迎横幅 -->
-    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-5 md:p-8 text-white shadow-md flex items-center justify-between overflow-hidden relative">
+    <div class="bg-linear-to-r from-blue-500 to-indigo-600 rounded-xl p-5 md:p-8 text-white shadow-md flex items-center justify-between overflow-hidden relative">
       <div class="z-10 flex-1">
         <h1 class="text-xl md:text-3xl font-bold">欢迎回来，{{ adminStore.user?.nickName || adminStore.user?.adminName }}！</h1>
         <p class="mt-2 text-blue-100 text-sm md:text-base opacity-90 max-w-2xl">
@@ -137,7 +117,7 @@ onMounted(async () => {
       </div>
       
       <!-- 头像区域 (高度加固版) -->
-      <div class="flex-shrink-0 z-10 ml-4 hidden sm:block">
+      <div class="shrink-0 z-10 ml-4 hidden sm:block">
         <div class="p-1 bg-white/20 rounded-full backdrop-blur-sm border border-white/30 shadow-lg">
           <div 
             class="rounded-full overflow-hidden border-2 border-white flex items-center justify-center bg-blue-400"

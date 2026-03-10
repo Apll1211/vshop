@@ -186,6 +186,12 @@ export interface CartItem {
 	userId: string;
 }
 
+export interface CartListResponse {
+	code: number;
+	message: string;
+	cartList: CartItem[];
+}
+
 // 订单相关类型
 export interface OrderItem {
 	_id: string;
@@ -212,6 +218,26 @@ export interface Order {
 	orderDetailList?: OrderItem[];
 }
 
+export interface SubmitOrderParams {
+	consignee: string;
+	consigneeTel: string;
+	deliveryAddress: string;
+	addressId?: string | number;
+	paymentWay: string;
+	orderComment: string;
+	orderDetailList: Partial<OrderItem>[];
+}
+
+export interface OrderListResponse {
+	code: number;
+	message: string;
+	orderList: Order[];
+	pageNo: number;
+	pageSum: number;
+	pageSize: number;
+	count: number;
+}
+
 // 管理员相关类型
 export interface AdminUser {
 	_id: string;
@@ -221,6 +247,17 @@ export interface AdminUser {
 	avatar?: string;
 	role: "admin" | "merchant";
 	createTime: string;
+}
+
+export interface AdminLoginParams {
+	adminName: string;
+	password: string;
+}
+
+export interface AdminLoginResponse {
+	code: number;
+	message: string;
+	token: string;
 }
 
 export interface AdminLog {

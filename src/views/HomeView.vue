@@ -46,7 +46,7 @@ onMounted(async () => {
 		// 兼容不同响应结构
 		hotProducts.value = (hotRes.data && (hotRes.data as any).data) || hotRes.data || [];
 	} catch (e) {
-		console.log("加载热门商品失败");
+		// 捕获异常
 	}
 });
 </script>
@@ -136,7 +136,7 @@ onMounted(async () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      class="!text-white hover:text-white hover:bg-white/10 text-xs"
+                      class="text-white! hover:text-white hover:bg-white/10 text-xs"
                       @click="router.push({ path: '/search', query: { keyword: '新品' } })"
                     >
                       <Sparkles class="w-3 h-3 mr-1" />
@@ -162,8 +162,8 @@ onMounted(async () => {
               :click-effect="true"
               glow-color="100, 200, 255"
             >
-              <Card class="bg-white/10 backdrop-blur-xl border-white/10 rounded-2xl h-full min-h-[380px] lg:min-h-[520px] overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <Card class="bg-white/10 backdrop-blur-xl border-white/10 rounded-2xl h-full min-h-95 lg:min-h-130 overflow-hidden relative">
+                <div class="absolute inset-0 bg-linear-to-br from-white/20 to-transparent" />
                 <CardContent class="p-8 lg:p-12 h-full flex flex-col justify-center relative">
                   <Badge class="w-fit mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm rounded-lg px-3 py-1">
                     新品首发
@@ -177,7 +177,7 @@ onMounted(async () => {
                   </p>
                   <Button
                     size="lg"
-                    class="w-fit bg-white !text-black hover:bg-white/90 rounded-xl px-8"
+                    class="w-fit bg-white text-black! hover:bg-white/90 rounded-xl px-8"
                     @click="router.push({ path: '/search' })"
                   >
                     立即探索
@@ -298,7 +298,7 @@ onMounted(async () => {
         >
           <motion.div :variants="itemVariants" class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-linear-to-br from-orange-400 to-orange-500 flex items-center justify-center">
                 <TrendingUp class="w-5 h-5 text-white" />
               </div>
               <div>

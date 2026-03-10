@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { LockOutlined, UserOutlined, ShopOutlined } from "@ant-design/icons-vue";
+import { LockOutlined, ShopOutlined, UserOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useAdminStore } from "@/stores/admin";
+import { useAdminStore } from "@/stores";
 
 const router = useRouter();
 const adminStore = useAdminStore();
@@ -25,7 +25,7 @@ const handleSubmit = async () => {
 
 	loading.value = true;
 	try {
-		let result;
+		let result: { success: boolean; message?: string };
 		if (loginType.value === "admin") {
 			result = await adminStore.login({
 				adminName: formState.value.account,
@@ -45,12 +45,15 @@ const handleSubmit = async () => {
 			message.error(result.message || "登录失败");
 		}
 	} catch (error: any) {
-		console.error("登录错误:", error);
 		message.error(error.message || "登录失败，请稍后重试");
 	} finally {
 		loading.value = false;
 	}
 };
+
+defineExpose({
+	handleSubmit,
+});
 </script>
 
 <template>

@@ -170,12 +170,7 @@ function processImage(img: HTMLImageElement): ImageData {
 	let width = img.naturalWidth || img.width;
 	let height = img.naturalHeight || img.height;
 
-	if (
-		width > MAX_SIZE ||
-		height > MAX_SIZE ||
-		width < MIN_SIZE ||
-		height < MIN_SIZE
-	) {
+	if (width > MAX_SIZE || height > MAX_SIZE || width < MIN_SIZE || height < MIN_SIZE) {
 		const scale =
 			width > height
 				? width > MAX_SIZE
@@ -275,11 +270,7 @@ function processImage(img: HTMLImageElement): ImageData {
 function hexToRgb(hex: string): [number, number, number] {
 	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 	return result
-		? [
-				parseInt(result[1], 16) / 255,
-				parseInt(result[2], 16) / 255,
-				parseInt(result[3], 16) / 255,
-			]
+		? [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255]
 		: [1, 1, 1];
 }
 

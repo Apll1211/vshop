@@ -30,9 +30,7 @@ const checkMobile = () => {
 	isMobile.value = window.innerWidth <= MOBILE_BREAKPOINT;
 };
 
-const shouldDisableAnimations = computed(
-	() => props.disableAnimations || isMobile.value,
-);
+const shouldDisableAnimations = computed(() => props.disableAnimations || isMobile.value);
 
 let cleanupEventListeners: (() => void) | null = null;
 

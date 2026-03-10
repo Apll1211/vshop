@@ -2,19 +2,19 @@
 import {
 	DeleteOutlined,
 	EditOutlined,
+	ExclamationCircleOutlined,
 	PlusOutlined,
 	UserOutlined,
-	ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { onMounted, reactive, ref, computed, createVNode } from "vue";
-import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
-import { createAdmin, deleteAdmin, getAdminList, updateAdmin } from "@/api";
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
+import { deleteAdmin, getAdminList, saveAdmin } from "@/api";
 import { getFileUrl } from "@/api/request";
 import type { AdminUser } from "@/api/types";
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = computed(() => breakpoints.smaller('md').value);
+const isMobile = computed(() => breakpoints.smaller("md").value);
 
 const loading = ref(false);
 const adminData = ref<AdminUser[]>([]);
@@ -26,6 +26,7 @@ const pagination = reactive({
 const showModal = ref(false);
 const editingAdmin = ref<AdminUser | null>(null);
 const formState = reactive({
+	id: "",
 	adminName: "",
 	password: "",
 	nickName: "",
@@ -42,7 +43,7 @@ const rowSelection = computed(() => ({
 		selectedRowKeys.value = keys;
 	},
 	getCheckboxProps: (record: AdminUser) => ({
-		disabled: record.adminName === 'admin' || record.adminName === 'yuma',
+		disabled: record.adminName === "admin" || record.adminName === "yuma",
 		name: record.adminName,
 	}),
 }));
@@ -54,11 +55,18 @@ const columns = computed(() => {
 		{ title: "昵称", dataIndex: "nickName", key: "nickName", minWidth: 100 },
 		{ title: "角色", dataIndex: "role", key: "role", width: 120 },
 		{ title: "创建时间", dataIndex: "createTime", key: "createTime", width: 180 },
-		{ title: "操作", key: "action", width: isMobile.value ? 100 : 180, fixed: isMobile.value ? undefined : 'right' },
+		{
+			title: "操作",
+			key: "action",
+			width: isMobile.value ? 100 : 180,
+			fixed: isMobile.value ? undefined : "right",
+		},
 	];
 
 	if (isMobile.value) {
-		return allColumns.filter(col => !['avatar', 'role', 'createTime'].includes(col.key as string));
+		return allColumns.filter(
+			(col) => !["avatar", "role", "createTime"].includes(col.key as string),
+		);
 	}
 	return allColumns;
 });
@@ -72,20 +80,20 @@ const fetchAdmins = async () => {
 		const data = res as any;
 		// 后端管理员列表可能暂时没做物理分页，前端做个模拟切片以保证 UI 正常
 		const list = data.adminList || (data.data && data.data.adminList) || [];
-		
+
 		const mappedList = list.map((item: any) => ({
 			...item,
-			_id: item._id || item.id
+			_id: item._id || item.id,
 		}));
 
 		// 如果后端没返回 total，则使用数组长度
 		pagination.total = mappedList.length;
-		
+
 		// 前端切片处理（防止后端未分页时界面溢出）
 		const start = (pagination.current - 1) * pagination.pageSize;
 		const end = start + pagination.pageSize;
 		adminData.value = mappedList.slice(start, end);
-		
+
 		selectedRowKeys.value = [];
 	} catch (error) {
 		console.error("获取管理员列表失败:", error);
@@ -128,32 +136,20 @@ const handleSubmit = async () => {
 
 	loading.value = true;
 	try {
+		const submitData: any = {
+			...formState,
+		};
 		if (editingAdmin.value) {
-			const updateData: any = {
-				nickName: formState.nickName,
-				avatar: formState.avatar,
-				role: formState.role,
-			};
-			if (formState.password) {
-				updateData.password = formState.password;
+			submitData.id = editingAdmin.value._id || (editingAdmin.value as any).id;
+			if (!formState.password) {
+				delete submitData.password;
 			}
-			const id = editingAdmin.value._id || (editingAdmin.value as any).id;
-			await updateAdmin(id, updateData);
-			message.success("修改成功");
-			showModal.value = false;
-			fetchAdmins();
-		} else {
-			await createAdmin({
-				adminName: formState.adminName,
-				password: formState.password,
-				nickName: formState.nickName,
-				avatar: formState.avatar,
-				role: formState.role,
-			});
-			message.success("添加成功");
-			showModal.value = false;
-			fetchAdmins();
 		}
+
+		await saveAdmin(submitData);
+		message.success(editingAdmin.value ? "修改成功" : "添加成功");
+		showModal.value = false;
+		fetchAdmins();
 	} catch (error: any) {
 		console.error("提交管理员失败:", error);
 		message.error(error.message || "操作失败");
@@ -164,7 +160,7 @@ const handleSubmit = async () => {
 
 // 删除单条
 const handleDelete = (admin: AdminUser) => {
-	if (admin.adminName === 'admin' || admin.adminName === 'yuma') {
+	if (admin.adminName === "admin" || admin.adminName === "yuma") {
 		return message.warning("系统核心账号禁止删除");
 	}
 	const id = admin._id || (admin as any).id;

@@ -2,14 +2,14 @@
 import {
 	DeleteOutlined,
 	EditOutlined,
+	ExclamationCircleOutlined,
 	EyeInvisibleOutlined,
 	EyeOutlined,
 	PlusOutlined,
-	ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { computed, onMounted, ref, reactive, createVNode } from "vue";
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
 import {
 	createCategory,
 	deleteCategory,
@@ -63,9 +63,7 @@ const columns = computed(() => {
 	];
 
 	if (isMobile.value) {
-		return allColumns.filter(
-			(col) => !["sort", "createTime"].includes(col.key as string),
-		);
+		return allColumns.filter((col) => !["sort", "createTime"].includes(col.key as string));
 	}
 	return allColumns;
 });
@@ -77,7 +75,7 @@ const fetchCategories = async () => {
 		const res = await getAllCategoryList();
 		const data = res as any;
 		const list = data.categoryList || (data.data && data.data.categoryList) || [];
-		
+
 		if (list) {
 			const cleanData = (list: Category[], path = "0"): any[] => {
 				return list.map((item, index) => {
@@ -125,7 +123,10 @@ const handleSubmit = async () => {
 
 	try {
 		if (editingCategory.value) {
-			const id = (editingCategory.value as any).actualId || editingCategory.value._id || (editingCategory.value as any).id;
+			const id =
+				(editingCategory.value as any).actualId ||
+				editingCategory.value._id ||
+				(editingCategory.value as any).id;
 			await updateCategory({
 				id,
 				name: formState.name,
@@ -181,7 +182,7 @@ const getNodeDepth = (id: string, list: any[]): number => {
  */
 const executeBatchDelete = async (ids: string[]) => {
 	const hide = message.loading(`正在同步清理分类树...`, 0);
-	
+
 	// 1. 核心逻辑：按深度降序排列 (先删除最深层的子分类，最后删除父分类)
 	// 这样可以规避后端因“分类下有子类不允许删除”的约束错误
 	const sortedIds = [...ids].sort((a, b) => {
@@ -204,7 +205,7 @@ const executeBatchDelete = async (ids: string[]) => {
 	hide();
 	if (successCount > 0) message.success(`成功清理 ${successCount} 个分类节点`);
 	if (failCount > 0) message.error(`${failCount} 个分类删除受阻 (可能包含关联商品)`);
-	
+
 	fetchCategories();
 };
 

@@ -11,24 +11,17 @@ import type {
 
 // 检查手机号是否存在
 export function checkPhoneExists(phone: string) {
-	return request.get<{ code: number; isHas: boolean; message: string }>(
-		`/api/user/${phone}`,
-	);
+	return request.get<{ code: number; isHas: boolean; message: string }>(`/api/user/${phone}`);
 }
 
 // 发送验证码
 export function sendCode(phone: string) {
-	return request.get<ApiResponse<string>>(
-		`/api/user/passport/sendCode/${phone}`,
-	);
+	return request.get<ApiResponse<string>>(`/api/user/passport/sendCode/${phone}`);
 }
 
 // 用户注册
 export function register(data: UserRegisterParams) {
-	return request.post<ApiResponse<UserInfo>>(
-		"/api/user/passport/register",
-		data,
-	);
+	return request.post<ApiResponse<UserInfo>>("/api/user/passport/register", data);
 }
 
 // 用户密码登录
@@ -48,16 +41,11 @@ export function logout() {
 
 // 获取用户信息
 export function getUserInfo() {
-	return request.get<ApiResponse<UserInfo>>(
-		"/api/user/passport/auth/getUserInfo",
-	);
+	return request.get<ApiResponse<UserInfo>>("/api/user/passport/auth/getUserInfo");
 }
 
 // 修改密码
-export function updatePassword(data: {
-	oldPassword: string;
-	password: string;
-}) {
+export function updatePassword(data: { oldPassword: string; password: string }) {
 	return request.put<ApiResponse>("/api/user/upPassword", data);
 }
 
@@ -81,9 +69,7 @@ export function uploadAvatar(formData: FormData) {
 
 // 获取用户地址列表
 export function getAddressList() {
-	return request.get<ApiResponse<UserAddress[]>>(
-		"/api/user/userAddress/auth/findUserAddressList",
-	);
+	return request.get<ApiResponse<UserAddress[]>>("/api/user/userAddress/auth/findUserAddressList");
 }
 
 // 添加用户地址
@@ -123,9 +109,7 @@ export function getHistory(params?: { pageNo?: number; pageSize?: number }) {
 
 // 删除浏览历史
 export function deleteHistory(id: string) {
-	return request.delete<{ ok: number; message: string }>(
-		`/api/user/sku/history/${id}`,
-	);
+	return request.delete<{ ok: number; message: string }>(`/api/user/sku/history/${id}`);
 }
 
 // ==================== 后台管理 API ====================

@@ -1,22 +1,13 @@
 <script setup lang="ts">
-import {
-	Eye,
-	EyeOff,
-	Lock,
-	Mail,
-	Phone,
-	ShieldCheck,
-	User,
-	ArrowLeft,
-} from "lucide-vue-next";
-import { motion, AnimatePresence } from "motion-v";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, Phone, ShieldCheck, User } from "lucide-vue-next";
+import { AnimatePresence, motion } from "motion-v";
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { useUserStore } from "@/stores/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUserStore } from "@/stores/user";
 
 const route = useRoute();
 const router = useRouter();
@@ -38,9 +29,12 @@ const registerForm = ref({
 	confirmPassword: "",
 });
 
-watch(() => route.name, (newName) => {
-  activeTab.value = newName === "register" ? "register" : "login";
-});
+watch(
+	() => route.name,
+	(newName) => {
+		activeTab.value = newName === "register" ? "register" : "login";
+	},
+);
 
 const handleLogin = async () => {
 	if (!loginForm.value.phone) return toast.error("请输入手机号");

@@ -3,25 +3,19 @@ import {
 	CheckCircleOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	ExclamationCircleOutlined,
 	PlusOutlined,
 	StopOutlined,
-	ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { onMounted, reactive, ref, computed, createVNode } from "vue";
-import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
-import {
-	createAdv,
-	deleteAdv,
-	getAdvList,
-	updateAdv,
-	updateAdvStatus,
-} from "@/api";
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
+import { createAdv, deleteAdv, getAdvList, updateAdv, updateAdvStatus } from "@/api";
 import { getFileUrl } from "@/api/request";
 import type { Advertisement } from "@/api/types";
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = computed(() => breakpoints.smaller('md').value);
+const isMobile = computed(() => breakpoints.smaller("md").value);
 
 const loading = ref(false);
 const advData = ref<Advertisement[]>([]);
@@ -60,11 +54,18 @@ const columns = computed(() => {
 		{ title: "类型", dataIndex: "advType", key: "advType", width: 100 },
 		{ title: "排序", dataIndex: "sort", key: "sort", width: 80 },
 		{ title: "状态", dataIndex: "status", key: "status", width: 100 },
-		{ title: "操作", key: "action", width: isMobile.value ? 110 : 200, fixed: isMobile.value ? undefined : 'right' },
+		{
+			title: "操作",
+			key: "action",
+			width: isMobile.value ? 110 : 200,
+			fixed: isMobile.value ? undefined : "right",
+		},
 	];
 
 	if (isMobile.value) {
-		return allColumns.filter(col => !['_id', 'linkUrl', 'advType', 'sort'].includes(col.key as string));
+		return allColumns.filter(
+			(col) => !["_id", "linkUrl", "advType", "sort"].includes(col.key as string),
+		);
 	}
 	return allColumns;
 });
@@ -82,7 +83,7 @@ const fetchAdvList = async () => {
 		const list = data.data || (data.data && data.data.data) || (Array.isArray(data) ? data : []);
 		advData.value = list.map((item: any) => ({
 			...item,
-			_id: item._id || item.id
+			_id: item._id || item.id,
 		}));
 		pagination.total = data.total || list.length;
 		selectedRowKeys.value = [];

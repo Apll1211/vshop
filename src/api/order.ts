@@ -1,10 +1,5 @@
 import request from "./request";
-import type {
-	ApiResponse,
-	Order,
-	OrderListResponse,
-	SubmitOrderParams,
-} from "./types";
+import type { ApiResponse, Order, OrderListResponse, SubmitOrderParams } from "./types";
 
 // ==================== 用户订单 API ====================
 
@@ -19,15 +14,10 @@ export function submitOrder(data: SubmitOrderParams) {
 }
 
 // 获取我的订单
-export function getMyOrderList(
-	pageNo: number = 1,
-	pageSize: number = 10,
-	status?: string,
-) {
-	return request.get<OrderListResponse>(
-		`/api/order/auth/${pageNo}/${pageSize}`,
-		{ params: { status } },
-	);
+export function getMyOrderList(pageNo: number = 1, pageSize: number = 10, status?: string) {
+	return request.get<OrderListResponse>(`/api/order/auth/${pageNo}/${pageSize}`, {
+		params: { status },
+	});
 }
 
 // 获取订单详情
@@ -49,16 +39,12 @@ export function deleteOrder(id: string) {
 
 // 获取支付信息 (微信支付二维码)
 export function getPayInfo(orderId: string) {
-	return request.get<ApiResponse<string>>(
-		`/api/payment/weixin/createNative/${orderId}`,
-	);
+	return request.get<ApiResponse<string>>(`/api/payment/weixin/createNative/${orderId}`);
 }
 
 // 查询支付状态
 export function queryPayStatus(orderId: string) {
-	return request.get<ApiResponse>(
-		`/api/payment/weixin/queryPayStatus/${orderId}`,
-	);
+	return request.get<ApiResponse>(`/api/payment/weixin/queryPayStatus/${orderId}`);
 }
 
 // 支付订单 (通用支付接口)

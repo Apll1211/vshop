@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { RouterLink } from 'vue-router'
-import { Home, ArrowRight } from 'lucide-vue-next'
+import { ArrowRight, Home } from "lucide-vue-next";
+import { RouterLink } from "vue-router";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 </script>
 
 <template>

@@ -15,10 +15,7 @@ const router = useRouter();
 
 // 计算折扣显示
 const discountDisplay = computed(() => {
-	if (
-		props.product.originalPrice &&
-		props.product.originalPrice > props.product.price
-	) {
+	if (props.product.originalPrice && props.product.originalPrice > props.product.price) {
 		const discount = props.product.price / props.product.originalPrice;
 		if (discount < 1) {
 			return `${Math.round(discount * 10)}折`;
@@ -32,7 +29,9 @@ function goToDetail() {
 	router.push(`/product/${props.product.id || props.product._id}`);
 }
 
-const productName = computed(() => props.product.fullName || props.product.title || props.product.name);
+const productName = computed(
+	() => props.product.fullName || props.product.title || props.product.name,
+);
 const productImg = computed(() => getFileUrl(props.product.defaultImg));
 </script>
 
@@ -56,7 +55,7 @@ const productImg = computed(() => getFileUrl(props.product.defaultImg));
         <!-- 折扣标签 -->
         <Badge
           v-if="discountDisplay"
-          class="absolute top-3 left-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-500 hover:to-red-500 text-white rounded-lg px-2 py-1"
+          class="absolute top-3 left-3 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-500 hover:to-red-500 text-white rounded-lg px-2 py-1"
         >
           {{ discountDisplay }}
         </Badge>
@@ -67,7 +66,7 @@ const productImg = computed(() => getFileUrl(props.product.defaultImg));
       <!-- 商品信息 -->
       <CardContent class="p-4">
         <!-- 商品名称 -->
-        <h3 class="text-sm font-medium text-slate-800 line-clamp-2 min-h-[2.5rem] mb-3 group-hover:text-blue-600 transition-colors">
+        <h3 class="text-sm font-medium text-slate-800 line-clamp-2 min-h-10 mb-3 group-hover:text-blue-600 transition-colors">
           {{ productName }}
         </h3>
 

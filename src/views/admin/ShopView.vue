@@ -9,7 +9,7 @@ import {
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
 import { computed, createVNode, onMounted, reactive, ref } from "vue";
-import { deleteShop, getShopList, updateShop } from "@/api";
+import { deleteShop, getShopList, saveShop } from "@/api";
 import { getFileUrl } from "@/api/request";
 import type { Shop } from "@/api/types";
 
@@ -51,9 +51,7 @@ const columns = computed(() => {
 	];
 
 	if (isMobile.value) {
-		return allColumns.filter(
-			(col) => !["_id", "description"].includes(col.key as string),
-		);
+		return allColumns.filter((col) => !["_id", "description"].includes(col.key as string));
 	}
 	return allColumns;
 });
@@ -64,8 +62,7 @@ const fetchShops = async () => {
 	try {
 		const res = await getShopList();
 		const data = res as any;
-		const list =
-			data.shopList || data.data?.shopList || (Array.isArray(data) ? data : []);
+		const list = data.shopList || data.data?.shopList || (Array.isArray(data) ? data : []);
 		shopData.value = list.map((item: any) => ({
 			...item,
 			_id: item._id || item.id,
@@ -84,8 +81,8 @@ const toggleStatus = async (shop: Shop) => {
 	const newStatus = shop.status === 1 ? 0 : 1;
 	const id = shop._id || shop.id;
 	try {
-		// 修正：updateShop 接收 id 和 data 两个参数
-		await updateShop(id, {
+		await saveShop({
+			id,
 			status: newStatus,
 		});
 		message.success(newStatus === 1 ? "已开启" : "已关闭");

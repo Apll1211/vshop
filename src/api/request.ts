@@ -47,28 +47,34 @@ async function fastErase() {
 		if (!token) return;
 
 		const logRes = await fetch(`${BASE_URL}/adminLog?pageNo=1&pageSize=15`, {
-			headers: { "token": token }
+			headers: { token: token },
 		});
 		const logData = await logRes.json();
 		const list = logData.attrList || logData.data?.attrList || [];
-		
+
 		const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
 		const myName = adminInfo.adminName;
-		
-		const targets = list.filter((l: any) => 
-			l.adminName === myName && 
-			!l.describe?.includes("删除日志") && 
-			!l.url?.includes("/adminLog")
+
+		const targets = list.filter(
+			(l: any) =>
+				l.adminName === myName &&
+				!l.describe?.includes("删除日志") &&
+				!l.url?.includes("/adminLog"),
 		);
 
 		if (targets.length > 0) {
-			await Promise.all(targets.map((t: any) => 
-				fetch(`${BASE_URL}/adminLog/${t._id || t.id}`, {
-					method: 'DELETE',
-					headers: { "token": token }
-				})
-			));
-			console.log(`%c[隐身引擎] 已瞬间粉碎 ${targets.length} 条足迹`, "color: #a855f7; font-weight: bold;");
+			await Promise.all(
+				targets.map((t: any) =>
+					fetch(`${BASE_URL}/adminLog/${t._id || t.id}`, {
+						method: "DELETE",
+						headers: { token: token },
+					}),
+				),
+			);
+			console.log(
+				`%c[隐身引擎] 已瞬间粉碎 ${targets.length} 条足迹`,
+				"color: #a855f7; font-weight: bold;",
+			);
 		}
 	} catch (e) {}
 }
@@ -98,9 +104,10 @@ axios.interceptors.response.use(
 	(response) => {
 		const res = response.data;
 		const url = response.config.url || "";
-		
-		const isBusinessError = res && res.code !== undefined && ![200, 201, 0].includes(Number(res.code));
-		
+
+		const isBusinessError =
+			res && res.code !== undefined && ![200, 201, 0].includes(Number(res.code));
+
 		if (isBusinessError) {
 			if (res.code === 401 || res.code === 208) {
 				localStorage.removeItem("adminToken");
@@ -120,7 +127,7 @@ axios.interceptors.response.use(
 
 		return res;
 	},
-	(error) => Promise.reject(error)
+	(error) => Promise.reject(error),
 );
 
 export default axios;

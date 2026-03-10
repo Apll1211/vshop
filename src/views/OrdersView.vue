@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-	AlertCircle,
-	CheckCircle2,
-	Clock,
-	Package,
-	ShoppingBag,
-	Truck,
-} from "lucide-vue-next";
+import { AlertCircle, CheckCircle2, Clock, Package, ShoppingBag, Truck } from "lucide-vue-next";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { getMyOrderList } from "@/api";

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons-vue";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { onMounted, reactive, ref, computed, createVNode } from "vue";
-import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
 import { deleteAdminLog, getAdminLogList } from "@/api";
-import { formatDate } from "@/lib/utils";
 import type { AdminLog } from "@/api/types";
+import { formatDate } from "@/lib/utils";
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = computed(() => breakpoints.smaller('md').value);
+const isMobile = computed(() => breakpoints.smaller("md").value);
 
 const loading = ref(false);
 const logData = ref<AdminLog[]>([]);
@@ -35,12 +35,17 @@ const columns = computed(() => {
 		{ title: "操作人", dataIndex: "adminName", key: "adminName", width: 120 },
 		{ title: "操作内容", dataIndex: "describe", key: "describe", minWidth: 200 },
 		{ title: "操作时间", dataIndex: "created_at", key: "created_at", width: 180 },
-		{ title: "操作", key: "action", width: isMobile.value ? 80 : 120, fixed: isMobile.value ? undefined : 'right' },
+		{
+			title: "操作",
+			key: "action",
+			width: isMobile.value ? 80 : 120,
+			fixed: isMobile.value ? undefined : "right",
+		},
 	];
 
 	if (isMobile.value) {
 		// 移动端隐藏 ID 和 操作时间
-		return allColumns.filter(col => !['_id', 'created_at'].includes(col.key as string));
+		return allColumns.filter((col) => !["_id", "created_at"].includes(col.key as string));
 	}
 	return allColumns;
 });
@@ -56,12 +61,12 @@ const fetchLogs = async () => {
 		});
 		const data = res as any;
 		const list = data.attrList || (data.data && data.data.attrList) || [];
-		
+
 		logData.value = list.map((item: any) => ({
 			...item,
-			_id: item._id || item.id 
+			_id: item._id || item.id,
 		}));
-		
+
 		pagination.total = data.count || (data.data && data.data.count) || list.length;
 		selectedRowKeys.value = [];
 	} catch (error) {
@@ -109,7 +114,7 @@ const executeBatchDelete = async (ids: string[]) => {
 	if (failCount > 0) {
 		message.error(`${failCount} 条日志删除失败`);
 	}
-	
+
 	fetchLogs();
 };
 

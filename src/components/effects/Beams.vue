@@ -34,8 +34,7 @@ const containerRef = useTemplateRef<HTMLDivElement>("containerRef");
 let renderer: THREE.WebGLRenderer | null = null;
 let scene: THREE.Scene | null = null;
 let camera: THREE.PerspectiveCamera | null = null;
-let beamMesh: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null =
-	null;
+let beamMesh: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
 let directionalLight: THREE.DirectionalLight | null = null;
 let ambientLight: THREE.AmbientLight | null = null;
 let animationId: number | null = null;
@@ -127,15 +126,10 @@ function extendMaterial(
 	cfg: ExtendMaterialConfig,
 ): THREE.ShaderMaterial {
 	const physical = THREE.ShaderLib.physical as ShaderWithDefines;
-	const {
-		vertexShader: baseVert,
-		fragmentShader: baseFrag,
-		uniforms: baseUniforms,
-	} = physical;
+	const { vertexShader: baseVert, fragmentShader: baseFrag, uniforms: baseUniforms } = physical;
 	const baseDefines = physical.defines ?? {};
 
-	const uniforms: Record<string, THREE.IUniform> =
-		THREE.UniformsUtils.clone(baseUniforms);
+	const uniforms: Record<string, THREE.IUniform> = THREE.UniformsUtils.clone(baseUniforms);
 
 	const defaults = new BaseMaterial(cfg.material || {}) as THREE.Material & {
 		color?: THREE.Color;
@@ -149,8 +143,7 @@ function extendMaterial(
 	if ("roughness" in defaults) uniforms.roughness.value = defaults.roughness;
 	if ("metalness" in defaults) uniforms.metalness.value = defaults.metalness;
 	if ("envMap" in defaults) uniforms.envMap.value = defaults.envMap;
-	if ("envMapIntensity" in defaults)
-		uniforms.envMapIntensity.value = defaults.envMapIntensity;
+	if ("envMapIntensity" in defaults) uniforms.envMapIntensity.value = defaults.envMapIntensity;
 
 	Object.entries(cfg.uniforms ?? {}).forEach(([key, u]) => {
 		uniforms[key] =
@@ -213,10 +206,7 @@ function createStackedPlanesBufferGeometry(
 			positions.set([...v0, ...v1], vertexOffset * 3);
 
 			const uvY = j / heightSegments;
-			uvs.set(
-				[uvXOffset, uvY + uvYOffset, uvXOffset + 1, uvY + uvYOffset],
-				uvOffset,
-			);
+			uvs.set([uvXOffset, uvY + uvYOffset, uvXOffset + 1, uvY + uvYOffset], uvOffset);
 
 			if (j < heightSegments) {
 				const a = vertexOffset,
@@ -326,13 +316,9 @@ const initThreeJS = () => {
 	group.add(beamMesh);
 	scene.add(group);
 
-	directionalLight = new THREE.DirectionalLight(
-		new THREE.Color(props.lightColor),
-		1,
-	);
+	directionalLight = new THREE.DirectionalLight(new THREE.Color(props.lightColor), 1);
 	directionalLight.position.set(0, 3, 10);
-	const shadowCamera = directionalLight.shadow
-		.camera as THREE.OrthographicCamera;
+	const shadowCamera = directionalLight.shadow.camera as THREE.OrthographicCamera;
 	shadowCamera.top = 24;
 	shadowCamera.bottom = -24;
 	shadowCamera.left = -24;
@@ -375,9 +361,8 @@ const initThreeJS = () => {
 	};
 
 	animationId = requestAnimationFrame(animate);
-	(
-		container as HTMLDivElement & { _resizeObserver?: ResizeObserver }
-	)._resizeObserver = resizeObserver;
+	(container as HTMLDivElement & { _resizeObserver?: ResizeObserver })._resizeObserver =
+		resizeObserver;
 };
 
 const cleanup = () => {

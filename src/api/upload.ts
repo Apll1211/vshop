@@ -4,21 +4,13 @@ import request from "./request";
 export const uploadImage = (file: File) => {
 	const formData = new FormData();
 	formData.append("yumaImg", file);
-	return request.post<{ code: number; message: string; url: string }>(
-		"/api/upload",
-		formData,
-		{
-			headers: { "Content-Type": "multipart/form-data" },
-		},
-	);
+	return request.post<{ code: number; message: string; url: string }>("/api/upload", formData, {
+		headers: { "Content-Type": "multipart/form-data" },
+	});
 };
 
 // 上传SPU商品图片 (支持多张)
-export const uploadSpuImages = (
-	shopId: string,
-	spuId: string,
-	files: File[],
-) => {
+export const uploadSpuImages = (shopId: string, spuId: string, files: File[]) => {
 	const formData = new FormData();
 	formData.append("shopId", shopId);
 	formData.append("spuId", spuId);

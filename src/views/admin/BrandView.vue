@@ -2,18 +2,18 @@
 import {
 	DeleteOutlined,
 	EditOutlined,
-	PlusOutlined,
 	ExclamationCircleOutlined,
+	PlusOutlined,
 } from "@ant-design/icons-vue";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { computed, onMounted, reactive, ref, createVNode } from "vue";
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
 import {
+	batchDeleteTrademark,
 	createTrademark,
 	deleteTrademark,
 	getTrademarkList,
 	updateTrademark,
-	batchDeleteTrademark,
 } from "@/api";
 import { getFileUrl } from "@/api/request";
 import type { Trademark } from "@/api/types";
@@ -69,9 +69,7 @@ const columns = computed(() => {
 	];
 
 	if (isMobile.value) {
-		return allColumns.filter(
-			(col) => !["_id", "sort", "createTime"].includes(col.key as string),
-		);
+		return allColumns.filter((col) => !["_id", "sort", "createTime"].includes(col.key as string));
 	}
 	return allColumns;
 });
@@ -89,7 +87,7 @@ const fetchBrands = async () => {
 		const list = data.trademarkList || (data.data && data.data.trademarkList) || [];
 		brandData.value = list.map((item: any) => ({
 			...item,
-			_id: item._id || item.id
+			_id: item._id || item.id,
 		}));
 		pagination.total = data.count || data.total || list.length;
 		selectedRowKeys.value = [];

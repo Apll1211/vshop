@@ -10,14 +10,7 @@ import {
 	Vector3,
 	WebGLRenderer,
 } from "three";
-import {
-	type CSSProperties,
-	onBeforeUnmount,
-	onMounted,
-	ref,
-	useTemplateRef,
-	watch,
-} from "vue";
+import { type CSSProperties, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 
 const vertexShader = `
 void main() {
@@ -216,12 +209,7 @@ const setupFn = () => {
 			uGamma: { value: props.gamma },
 			uDensity: { value: props.density },
 			uVariant: {
-				value:
-					props.variant === "round"
-						? 1.0
-						: props.variant === "snowflake"
-							? 2.0
-							: 0.0,
+				value: props.variant === "round" ? 1.0 : props.variant === "snowflake" ? 2.0 : 0.0,
 			},
 			uDirection: { value: (props.direction * Math.PI) / 180 },
 		},

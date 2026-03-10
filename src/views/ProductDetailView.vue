@@ -43,9 +43,7 @@ const selectedAttrs = ref<Record<string, string>>({});
 const isFavorite = ref(false);
 
 const skuInfo = computed<Sku | null>(() => product.value?.skuInfo || null);
-const spuSaleAttrList = computed<SpuSaleAttr[]>(
-	() => product.value?.spuSaleAttrList || [],
-);
+const spuSaleAttrList = computed<SpuSaleAttr[]>(() => product.value?.spuSaleAttrList || []);
 const images = computed(() => {
 	if (!skuInfo.value?.skuImageList || skuInfo.value.skuImageList.length === 0) {
 		const defaultImg = skuInfo.value?.skuDefaultImg || skuInfo.value?.defaultImg;
@@ -67,18 +65,15 @@ onMounted(async () => {
 	if (!id) return;
 
 	try {
-		const res = await getProductDetail(id);
+		const res = (await getProductDetail(id)) as any;
 		if (res) {
 			// 后端返回可能在 res.data 中，拦截器已处理
-			product.value = res as any;
-			
+			product.value = res.data || res.product || res;
+
 			// 初始化选中属性
 			if (spuSaleAttrList.value.length > 0) {
 				spuSaleAttrList.value.forEach((attr) => {
-					if (
-						attr.spuSaleAttrValueList &&
-						attr.spuSaleAttrValueList.length > 0
-					) {
+					if (attr.spuSaleAttrValueList && attr.spuSaleAttrValueList.length > 0) {
 						selectedAttrs.value[attr.saleAttrName] =
 							attr.spuSaleAttrValueList[0]?.saleAttrValueName || "";
 					}
@@ -86,7 +81,6 @@ onMounted(async () => {
 			}
 		}
 	} catch (error) {
-		console.error("加载商品详情失败:", error);
 		toast.error("加载商品详情失败");
 	} finally {
 		loading.value = false;
@@ -113,7 +107,10 @@ const addToCart = async () => {
 	if (!skuInfo.value) return;
 
 	try {
-		const success = await cartStore.addToCartAction(skuInfo.value.id || skuInfo.value._id, quantity.value);
+		const success = await cartStore.addToCartAction(
+			skuInfo.value.id || skuInfo.value._id,
+			quantity.value,
+		);
 		if (success) {
 			toast.success("已添加到购物车");
 		} else {
@@ -131,7 +128,10 @@ const buyNow = async () => {
 		return;
 	}
 
-	const success = await cartStore.addToCartAction(skuInfo.value?.id || skuInfo.value?._id || "", quantity.value);
+	const success = await cartStore.addToCartAction(
+		skuInfo.value?.id || skuInfo.value?._id || "",
+		quantity.value,
+	);
 	if (success) {
 		router.push({ name: "checkout" });
 	}

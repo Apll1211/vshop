@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { gsap } from "gsap";
-import {
-	computed,
-	onBeforeUnmount,
-	onMounted,
-	ref,
-	useTemplateRef,
-	watch,
-} from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 
 interface TextTypeProps {
 	className?: string;
@@ -55,9 +48,7 @@ const isVisible = ref(!props.startOnVisible);
 const cursorRef = useTemplateRef("cursorRef");
 const containerRef = useTemplateRef("containerRef");
 
-const textArray = computed(() =>
-	Array.isArray(props.text) ? props.text : [props.text],
-);
+const textArray = computed(() => (Array.isArray(props.text) ? props.text : [props.text]));
 
 const getRandomSpeed = () => {
 	if (!props.variableSpeed) return props.typingSpeed;
@@ -78,23 +69,16 @@ const clearTimeoutIfNeeded = () => {
 
 const executeTypingAnimation = () => {
 	const currentText = textArray.value[currentTextIndex.value];
-	const processedText = props.reverseMode
-		? currentText.split("").reverse().join("")
-		: currentText;
+	const processedText = props.reverseMode ? currentText.split("").reverse().join("") : currentText;
 
 	if (isDeleting.value) {
 		if (displayedText.value === "") {
 			isDeleting.value = false;
-			if (currentTextIndex.value === textArray.value.length - 1 && !props.loop)
-				return;
+			if (currentTextIndex.value === textArray.value.length - 1 && !props.loop) return;
 
-			props.onSentenceComplete?.(
-				textArray.value[currentTextIndex.value],
-				currentTextIndex.value,
-			);
+			props.onSentenceComplete?.(textArray.value[currentTextIndex.value], currentTextIndex.value);
 
-			currentTextIndex.value =
-				(currentTextIndex.value + 1) % textArray.value.length;
+			currentTextIndex.value = (currentTextIndex.value + 1) % textArray.value.length;
 			currentCharIndex.value = 0;
 			timeout = setTimeout(() => {}, props.pauseDuration);
 		} else {
@@ -125,11 +109,7 @@ watch(
 		if (!isVisible.value) return;
 		clearTimeoutIfNeeded();
 
-		if (
-			currentCharIndex.value === 0 &&
-			!isDeleting.value &&
-			displayedText.value === ""
-		) {
+		if (currentCharIndex.value === 0 && !isDeleting.value && displayedText.value === "") {
 			timeout = setTimeout(() => {
 				executeTypingAnimation();
 			}, props.initialDelay);

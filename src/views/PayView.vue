@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-	AlertCircle,
-	ArrowLeft,
-	CheckCircle2,
-	Clock,
-	CreditCard,
-	Wallet,
-} from "lucide-vue-next";
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock, CreditCard, Wallet } from "lucide-vue-next";
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
@@ -36,12 +29,9 @@ const fetchOrder = async () => {
 
 	try {
 		loading.value = true;
-		const res = await getOrderDetail(orderId.value);
-		if (res && res.code === 200) {
-			order.value = res.data || (res as any).order;
-		}
+		const res = (await getOrderDetail(orderId.value)) as any;
+		order.value = res.data || res.order || res;
 	} catch (error) {
-		console.error("获取订单失败:", error);
 		toast.error("获取订单信息失败");
 	} finally {
 		loading.value = false;
@@ -53,16 +43,12 @@ const handlePay = async () => {
 
 	paying.value = true;
 	try {
-		const res = await payOrder(order.value._id, paymentMethod.value);
-		if (res.code === 200) {
-			toast.success("支付成功");
-			router.push({
-				name: "pay-success",
-				params: { orderId: order.value._id },
-			});
-		} else {
-			toast.error(res.message || "支付失败");
-		}
+		const res = (await payOrder(order.value._id, paymentMethod.value)) as any;
+		toast.success("支付成功");
+		router.push({
+			name: "pay-success",
+			params: { orderId: order.value._id },
+		});
 	} catch (error: any) {
 		toast.error(error.message || "支付失败");
 	} finally {

@@ -2,20 +2,18 @@
 import {
 	DeleteOutlined,
 	EditOutlined,
+	ExclamationCircleOutlined,
 	EyeOutlined,
 	PlusCircleOutlined,
 	PlusOutlined,
 	SaveOutlined,
 	SearchOutlined,
 	StockOutlined,
-	ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { computed, onMounted, reactive, ref, createVNode } from "vue";
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
 import {
-	createSku,
-	createSpu,
 	deleteSku,
 	deleteSpu,
 	getAllCategoryList,
@@ -25,9 +23,9 @@ import {
 	getSpuDetail,
 	getSpuList,
 	getSpuSaleAttrList,
+	saveSku,
+	saveSpu,
 	toggleSkuSale,
-	updateSku,
-	updateSpu,
 } from "@/api";
 import { getFileUrl } from "@/api/request";
 import type { Category, Sku, Spu, SpuSaleAttr, Trademark } from "@/api/types";
@@ -120,7 +118,7 @@ const fetchProducts = async () => {
 		const list = data.spuList || (data.data && data.data.spuList) || [];
 		spuData.value = list.map((item: any) => ({
 			...item,
-			_id: item._id || item.id
+			_id: item._id || item.id,
 		}));
 		pagination.total = data.count || list.length;
 		selectedRowKeys.value = [];
@@ -174,13 +172,13 @@ const handleSubmitSpu = async () => {
 		formData.append("categoryId", spuForm.categoryId);
 		formData.append("showFlag", String(spuForm.showFlag));
 		formData.append("sort", String(spuForm.sort));
-		spuForm.images.forEach(img => formData.append("images", img));
+		spuForm.images.forEach((img) => formData.append("images", img));
 
 		if (isEditingSpu.value) {
-			await updateSpu(formData);
+			await saveSpu(formData);
 			message.success("修改成功");
 		} else {
-			await createSpu(formData);
+			await saveSpu(formData);
 			message.success("添加成功");
 		}
 		showSpuModal.value = false;
@@ -249,9 +247,9 @@ const handleBatchDelete = () => {
 const toggleSpu = async (record: Spu) => {
 	const newFlag = record.showFlag === 1 ? 0 : 1;
 	try {
-		await updateSpu({
+		await saveSpu({
 			id: record._id || record.id,
-			showFlag: newFlag
+			showFlag: newFlag,
 		} as any);
 		message.success("状态更新成功");
 		fetchProducts();

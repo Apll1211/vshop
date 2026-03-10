@@ -50,8 +50,7 @@ const fetchAddresses = async () => {
 			if (addresses.value.length > 0) {
 				// 默认选择第一个或默认地址
 				const defaultAddr = addresses.value.find((a) => a.isDefault === 1);
-				selectedAddressId.value =
-					defaultAddr?.id || addresses.value[0]?.id || "";
+				selectedAddressId.value = defaultAddr?.id || addresses.value[0]?.id || "";
 			}
 		}
 	} catch (error) {
@@ -278,7 +277,7 @@ onMounted(() => {
               </div>
 
               <Button
-                class="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
+                class="w-full bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
                 size="lg"
                 @click="handleSubmit"
                 :disabled="submitting || !selectedAddressId"

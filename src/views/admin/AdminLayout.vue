@@ -21,7 +21,7 @@ import { Layout, Menu, Modal, message } from "ant-design-vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getFileUrl } from "@/api/request";
-import { useAdminStore } from "@/stores/admin";
+import { useAdminStore } from "@/stores";
 
 const route = useRoute();
 const router = useRouter();
@@ -68,6 +68,12 @@ const handleLogout = () => {
 		},
 	});
 };
+
+defineExpose({
+	handleMenuClick,
+	goHome,
+	handleLogout,
+});
 
 onMounted(() => {
 	if (!adminStore.isLoggedIn) {
@@ -164,7 +170,7 @@ onMounted(() => {
             <MenuFoldOutlined v-else />
           </div>
           <h2 class="page-title">
-            {{ route.meta.title?.split(' - ')[0] || '系统管理' }}
+            {{ (route.meta.title as string)?.split(' - ')[0] || '系统管理' }}
           </h2>
         </div>
 

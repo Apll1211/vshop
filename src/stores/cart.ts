@@ -20,33 +20,27 @@ export const useCartStore = defineStore(
 
 		// 计算属性
 		const cartCount = computed(() => cartList.value.length);
-		const checkedCartList = computed(() =>
-			cartList.value.filter((item) => item.isChecked === 1),
-		);
+		const checkedCartList = computed(() => cartList.value.filter((item) => item.isChecked === 1));
 		const checkedCount = computed(() => checkedCartList.value.length);
 		const isAllChecked = computed(
-			() =>
-				cartList.value.length > 0 &&
-				cartList.value.every((item) => item.isChecked === 1),
+			() => cartList.value.length > 0 && cartList.value.every((item) => item.isChecked === 1),
 		);
 		const totalPrice = computed(() => {
 			return checkedCartList.value.reduce((sum, item) => {
-				return sum + parseFloat(item.skuPrice) * item.skuNum;
+				const price = typeof item.skuPrice === "string" ? parseFloat(item.skuPrice) : item.skuPrice;
+				return sum + (price || 0) * item.skuNum;
 			}, 0);
 		});
-		const selectedIds = computed(() =>
-			checkedCartList.value.map((item) => item.id),
-		);
+		const selectedIds = computed(() => checkedCartList.value.map((item) => item.id));
 
 		// 获取购物车列表
 		async function getCartListAction() {
 			loading.value = true;
 			try {
 				const res = (await getCartList()) as any;
-				cartList.value = res.data || [];
+				cartList.value = res.cartList || res.data || [];
 				return cartList.value;
-			} catch (error) {
-				console.error("获取购物车失败:", error);
+			} catch {
 				return [];
 			} finally {
 				loading.value = false;
@@ -59,8 +53,7 @@ export const useCartStore = defineStore(
 				await addToCart(skuId, buyNum);
 				await getCartListAction();
 				return true;
-			} catch (error) {
-				console.error("加入购物车失败:", error);
+			} catch {
 				return false;
 			}
 		}
@@ -71,8 +64,7 @@ export const useCartStore = defineStore(
 				await deleteCartItem(id);
 				cartList.value = cartList.value.filter((item) => item.id !== id);
 				return true;
-			} catch (error) {
-				console.error("删除商品失败:", error);
+			} catch {
 				return false;
 			}
 		}
@@ -84,8 +76,7 @@ export const useCartStore = defineStore(
 				await batchDeleteCart(selectedIds.value);
 				await getCartListAction();
 				return true;
-			} catch (error) {
-				console.error("批量删除失败:", error);
+			} catch {
 				return false;
 			}
 		}
@@ -99,8 +90,7 @@ export const useCartStore = defineStore(
 					item.skuNum = skuNum;
 				}
 				return true;
-			} catch (error) {
-				console.error("更新数量失败:", error);
+			} catch {
 				return false;
 			}
 		}
@@ -111,11 +101,10 @@ export const useCartStore = defineStore(
 			if (!item) return false;
 			try {
 				const newChecked = item.isChecked === 1 ? 0 : 1;
-				await toggleCartChecked(id, newChecked);
+				await toggleCartChecked(id, String(newChecked));
 				item.isChecked = newChecked;
 				return true;
-			} catch (error) {
-				console.error("切换选中状态失败:", error);
+			} catch {
 				return false;
 			}
 		}
@@ -124,13 +113,12 @@ export const useCartStore = defineStore(
 		async function toggleAllCheckedAction() {
 			try {
 				const newChecked = isAllChecked.value ? 0 : 1;
-				await toggleAllChecked(newChecked);
+				await toggleAllChecked(String(newChecked));
 				cartList.value.forEach((item) => {
 					item.isChecked = newChecked;
 				});
 				return true;
-			} catch (error) {
-				console.error("全选操作失败:", error);
+			} catch {
 				return false;
 			}
 		}

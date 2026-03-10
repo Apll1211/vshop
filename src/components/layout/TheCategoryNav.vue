@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-	ChevronDown,
-	ChevronLeft,
-	ChevronRight,
-	ChevronsRight,
-} from "lucide-vue-next";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-vue-next";
 import { AnimatePresence, motion } from "motion-v";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -38,9 +33,7 @@ const quickNavs = computed(() => {
 });
 
 // 总页数基于后端总数
-const trademarkTotalPages = computed(() =>
-	Math.ceil(backendTotal.value / trademarkPageSize),
-);
+const trademarkTotalPages = computed(() => Math.ceil(backendTotal.value / trademarkPageSize));
 const canPrev = computed(() => trademarkPage.value > 1);
 const canNext = computed(() => trademarkPage.value < trademarkTotalPages.value);
 
