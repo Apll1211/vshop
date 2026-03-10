@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons-vue";
 import { Modal, message, Upload, Select, Input, Switch, Form } from "ant-design-vue";
 import { onMounted, reactive, ref } from "vue";
-import type { Sku, Spu, Category, Trademark, SpuSaleAttr } from "@/api/admin";
+import type { Sku, Spu, Category, Trademark, SpuSaleAttr } from "@/api/types";
 import {
   deleteSpu,
   deleteSku,
@@ -26,7 +26,7 @@ import {
   getSkuDetail,
   getAllCategoryList,
   getAllTrademark,
-} from "@/api/admin";
+} from "@/api";
 
 const loading = ref(false);
 const productData = ref<Spu[]>([]);

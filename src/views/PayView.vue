@@ -12,14 +12,14 @@ import {
   AlertCircle,
   ArrowLeft,
 } from 'lucide-vue-next'
-import { getOrderDetail, payOrder } from '@/api/order'
+import { getOrderDetail, payOrder } from '@/api'
 import { toast } from 'vue-sonner'
-import type { OrderInfo } from '@/api/types'
+import type { Order } from '@/api/types'
 
 const route = useRoute()
 const router = useRouter()
 
-const order = ref<OrderInfo | null>(null)
+const order = ref<Order | null>(null)
 const loading = ref(true)
 const paying = ref(false)
 const paymentMethod = ref(1)
@@ -36,9 +36,9 @@ const fetchOrder = async () => {
   
   try {
     loading.value = true
-    const res = await getOrderDetail(orderId.value) as any
-    if (res) {
-      order.value = res.data
+    const res = await getOrderDetail(orderId.value)
+    if (res && res.code === 200) {
+      order.value = res.data || (res as any).order
     }
   } catch (error) {
     console.error('获取订单失败:', error)
@@ -53,9 +53,13 @@ const handlePay = async () => {
   
   paying.value = true
   try {
-    await payOrder(order.value.id, paymentMethod.value) as any
-    toast.success('支付成功')
-    router.push({ name: 'pay-success', params: { orderId: order.value.id } })
+    const res = await payOrder(order.value._id, paymentMethod.value)
+    if (res.code === 200) {
+      toast.success('支付成功')
+      router.push({ name: 'pay-success', params: { orderId: order.value._id } })
+    } else {
+      toast.error(res.message || '支付失败')
+    }
   } catch (error: any) {
     toast.error(error.message || '支付失败')
   } finally {

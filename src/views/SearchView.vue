@@ -19,7 +19,7 @@ import {
   ChevronRight,
   Package,
 } from 'lucide-vue-next'
-import { searchProducts } from '@/api/product'
+import { searchProducts } from '@/api'
 import { useCartStore } from '@/stores/cart'
 import { toast } from 'vue-sonner'
 import type { ProductInfo } from '@/api/types'
@@ -59,7 +59,7 @@ const fetchData = async () => {
     
     const res = await searchProducts({
       keyword: keyword.value,
-      page: page.value,
+      pageNo: page.value,
       pageSize: pageSize.value,
       order: sortOrder.value !== 'default' ? sortOrder.value : undefined,
     })

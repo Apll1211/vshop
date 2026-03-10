@@ -4,8 +4,8 @@ import { message, Modal } from 'ant-design-vue';
 import {
   getAdminLogList,
   deleteAdminLog,
-} from '@/api/admin';
-import type { AdminLog } from '@/api/admin';
+} from '@/api';
+import type { AdminLog } from '@/api/types';
 import { DeleteOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);
@@ -20,9 +20,9 @@ const searchAdminName = ref('');
 const columns = [
   { title: 'ID', dataIndex: '_id', key: '_id', width: 220 },
   { title: '操作人', dataIndex: 'adminName', key: 'adminName', width: 120 },
-  { title: '操作内容', dataIndex: 'operation', key: 'operation' },
+  { title: '操作内容', dataIndex: 'describe', key: 'describe' },
   { title: 'IP地址', dataIndex: 'ip', key: 'ip', width: 140 },
-  { title: '操作时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
+  { title: '操作时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
   { title: '操作', key: 'action', width: 100 },
 ];
 
@@ -31,7 +31,8 @@ const fetchLogs = async () => {
   loading.value = true;
   try {
     const res = await getAdminLogList({
-      page: pagination.current,
+      adminName: searchAdminName.value,
+      pageNo: pagination.current,
       pageSize: pagination.pageSize,
     });
     if (res.code === 200 && res.attrList) {

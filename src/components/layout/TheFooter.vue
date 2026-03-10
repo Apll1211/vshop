@@ -6,7 +6,7 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-  <footer class="bg-gradient-to-b from-slate-800 to-slate-900 text-white mt-auto">
+  <footer class="bg-slate-900 text-white relative z-10">
     <!-- 主要内容区 -->
     <div class="container mx-auto px-4 lg:px-8 py-10 lg:py-16">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">

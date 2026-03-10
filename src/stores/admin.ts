@@ -1,11 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { adminLogin, adminLogout, getAdminInfo } from '@/api/admin';
-import type { AdminUser, AdminLoginParams } from '@/api/admin';
+import { adminLogin, adminLogout, getAdminInfo } from '@/api';
+import type { AdminUser, AdminLoginParams } from '@/api/types';
+
+export interface AdminLoginParamsLocal {
+  adminName: string;
+  password: string;
+}
 
 export const useAdminStore = defineStore('admin', () => {
   const token = ref<string | null>(localStorage.getItem('adminToken'));
-  const user = ref<AdminUser | null>(() => {
+  
+  // 立即从 localStorage 获取初始用户信息
+  const getInitialUser = (): AdminUser | null => {
     const stored = localStorage.getItem('adminInfo');
     if (stored) {
       try {
@@ -15,24 +22,23 @@ export const useAdminStore = defineStore('admin', () => {
       }
     }
     return null;
-  });
+  };
+
+  const user = ref<AdminUser | null>(getInitialUser());
 
   const isLoggedIn = computed(() => !!token.value && !!user.value);
   const isAdmin = computed(() => user.value?.role === 'admin');
   const isMerchant = computed(() => user.value?.isMerchant === 1 || user.value?.role === 'admin');
 
-  const login = async (params: AdminLoginParams) => {
+  const login = async (params: AdminLoginParamsLocal) => {
     console.log('AdminStore.login 被调用:', params);
     try {
       const res = await adminLogin(params);
       console.log('登录API响应:', res);
-      // 登录响应: { code: 200, message: "登陆成功", token: "xxx" }
-      // token在根级别，不在data里
       if (res.code === 200 && res.token) {
         token.value = res.token;
         localStorage.setItem('adminToken', res.token);
         console.log('Token已保存');
-        // 登录成功后获取管理员信息
         await fetchAdminInfo();
         return { success: true };
       } else {
@@ -65,7 +71,6 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       const res = await getAdminInfo();
       console.log('获取管理员信息响应:', res);
-      // 获取管理员信息响应: { code: 200, info: {} }
       if (res.code === 200 && res.info) {
         user.value = res.info;
         localStorage.setItem('adminInfo', JSON.stringify(res.info));

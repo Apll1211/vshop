@@ -6,8 +6,8 @@ import {
   createTrademark,
   updateTrademark,
   deleteTrademark,
-} from '@/api/admin';
-import type { Trademark } from '@/api/admin';
+} from '@/api';
+import type { Trademark } from '@/api/types';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);

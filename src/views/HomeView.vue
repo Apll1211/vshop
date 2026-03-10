@@ -12,7 +12,7 @@ import {
 import { motion } from "motion-v";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { searchProducts } from "@/api/product";
+import { searchProducts } from "@/api";
 import type { ProductInfo } from "@/api/types";
 import GlowBox from "@/components/effects/GlowBox.vue";
 import PixelSnow from "@/components/effects/PixelSnow.vue";
@@ -324,69 +324,6 @@ onMounted(async () => {
             暂无热门商品
           </div>
         </motion.div>
-      </div>
-    </section>
-
-    <!-- 服务保障 -->
-    <section class="py-12 lg:py-16 bg-white border-t border-slate-100">
-      <div class="container mx-auto px-4 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            :viewport="{ once: true }"
-            :variants="itemVariants"
-            class="text-center"
-          >
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-100 flex items-center justify-center mb-4">
-              <Truck class="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 class="font-semibold text-slate-900 mb-1">极速配送</h3>
-            <p class="text-sm text-slate-500">全国大部分地区次日达</p>
-          </motion.div>
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            :viewport="{ once: true }"
-            :variants="itemVariants"
-            class="text-center"
-          >
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-green-100 flex items-center justify-center mb-4">
-              <Shield class="w-8 h-8 text-green-600" />
-            </div>
-            <h3 class="font-semibold text-slate-900 mb-1">正品保障</h3>
-            <p class="text-sm text-slate-500">100%正品假一赔十</p>
-          </motion.div>
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            :viewport="{ once: true }"
-            :variants="itemVariants"
-            class="text-center"
-          >
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-pink-100 flex items-center justify-center mb-4">
-              <Gift class="w-8 h-8 text-pink-600" />
-            </div>
-            <h3 class="font-semibold text-slate-900 mb-1">优惠多多</h3>
-            <p class="text-sm text-slate-500">每日优惠享不停</p>
-          </motion.div>
-          
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            :viewport="{ once: true }"
-            :variants="itemVariants"
-            class="text-center"
-          >
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-100 flex items-center justify-center mb-4">
-              <Zap class="w-8 h-8 text-orange-600" />
-            </div>
-            <h3 class="font-semibold text-slate-900 mb-1">闪电退款</h3>
-            <p class="text-sm text-slate-500">极速退款无需等待</p>
-          </motion.div>
-        </div>
       </div>
     </section>
   </div>

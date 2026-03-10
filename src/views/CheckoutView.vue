@@ -11,7 +11,7 @@ import {
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { getAddressList, submitOrder } from "@/api/order";
+import { getAddressList, submitOrder } from "@/api";
 import type { UserAddress } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ const fetchAddresses = async () => {
 	try {
 		loading.value = true;
 		const res = (await getAddressList()) as any;
-		if (res) {
+		if (res && res.code === 200) {
 			addresses.value = res.data || [];
 			if (addresses.value.length > 0) {
 				// 默认选择第一个或默认地址
@@ -82,15 +82,21 @@ const handleSubmit = async () => {
 			addressId: selectedAddressId.value,
 			skuInfoList,
 			paymentMethod: paymentMethod.value,
+      consignee: selectedAddress.value?.consignee || '',
+      consigneeTel: selectedAddress.value?.phone || '',
+      deliveryAddress: selectedAddress.value?.detailAddress || '',
+      paymentWay: paymentMethod.value === 1 ? '支付宝' : '微信'
 		})) as any;
 
-		if (res && res.data) {
+		if (res && res.code === 200) {
 			toast.success("订单提交成功");
 			router.push({
 				name: "pay",
-				params: { orderId: res.data.orderId || res.data.id },
+				params: { orderId: res.data || res.orderId },
 			});
-		}
+		} else {
+      toast.error(res.message || "订单提交失败");
+    }
 	} catch (error: any) {
 		toast.error(error.message || "订单提交失败");
 	} finally {

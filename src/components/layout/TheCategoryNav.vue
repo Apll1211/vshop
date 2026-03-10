@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import { motion, AnimatePresence } from "motion-v";
 import type { Category, Trademark } from "@/api/types";
 import { useCategoryStore } from "@/stores";
-import { getTrademarkListPage } from "@/api/product";
+import { getFrontTrademarkListPage } from "@/api";
 
 const router = useRouter();
 const categoryStore = useCategoryStore();
@@ -27,7 +27,7 @@ const quickNavs = computed(() => {
   const start = (trademarkPage.value - 1) * trademarkPageSize;
   const end = start + trademarkPageSize;
   return allTrademarks.value.slice(start, end).map(tm => ({
-    id: tm.id,
+    id: tm._id || tm.id,
     name: tm.name,
   }));
 });
@@ -48,9 +48,9 @@ async function fetchTrademarkPage(page: number) {
   if (isLoading.value) return;
   isLoading.value = true;
   try {
-    const res = await getTrademarkListPage({ page, limit: trademarkPageSize }) as any;
+    const res = await getFrontTrademarkListPage({ pageNo: page, pageSize: trademarkPageSize }) as any;
     if (res) {
-      const list = res.data || res.trademarkList || [];
+      const list = res.trademarkList || res.data || [];
       backendTotal.value = res.total || list.length;
       // 追加到本地缓存
       allTrademarks.value = [...allTrademarks.value, ...list];

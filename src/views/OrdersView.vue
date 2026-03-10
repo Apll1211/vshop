@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, defineComponent } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,14 +13,14 @@ import {
   AlertCircle,
   ShoppingBag,
 } from 'lucide-vue-next'
-import { getOrderList } from '@/api/order'
+import { getMyOrderList } from '@/api'
 import { useUserStore } from '@/stores/user'
-import type { OrderInfo } from '@/api/types'
+import type { Order } from '@/api/types'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const orders = ref<OrderInfo[]>([])
+const orders = ref<Order[]>([])
 const loading = ref(true)
 const currentStatus = ref('all')
 
@@ -29,7 +29,7 @@ const formatPrice = (price: string | number) => {
   return (p / 100).toFixed(2)
 }
 
-const getStatusBadge = (order: OrderInfo) => {
+const getStatusBadge = (order: Order) => {
   if (order.orderStatus === 'UNPAID') {
     return { variant: 'outline' as const, text: '待支付', class: 'border-amber-500 text-amber-600' }
   } else if (order.orderStatus === 'PAID') {
@@ -47,9 +47,9 @@ const getStatusBadge = (order: OrderInfo) => {
 const fetchOrders = async () => {
   try {
     loading.value = true
-    const res = await getOrderList() as any
-    if (res) {
-      orders.value = res.data?.records || []
+    const res = await getMyOrderList(1, 100)
+    if (res && res.code === 200) {
+      orders.value = res.orderList || (res.data as any)?.records || []
     }
   } catch (error) {
     console.error('获取订单列表失败:', error)
@@ -118,7 +118,7 @@ onMounted(() => {
 
         <!-- 订单列表 -->
         <div v-else class="space-y-4">
-          <Card v-for="order in filteredOrders" :key="order.id" class="hover:shadow-md transition-shadow">
+          <Card v-for="order in filteredOrders" :key="order._id" class="hover:shadow-md transition-shadow">
             <CardContent class="p-6">
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-4">
@@ -145,14 +145,14 @@ onMounted(() => {
               
               <div class="flex items-center justify-between mt-4 pt-4 border-t">
                 <div class="text-sm">
-                  共 {{ order.orderDetailList.length }} 件商品，合计:
+                  共 {{ order.orderDetailList?.length || 0 }} 件商品，合计:
                   <span class="text-lg font-bold text-rose-500">¥{{ formatPrice(order.totalAmount) }}</span>
                 </div>
                 <div class="flex gap-2">
-                  <Button variant="outline" @click="handleViewDetail(order.id)">
+                  <Button variant="outline" @click="handleViewDetail(order._id)">
                     查看详情
                   </Button>
-                  <Button v-if="order.orderStatus === 'UNPAID'" @click="handlePay(order.id)">
+                  <Button v-if="order.orderStatus === 'UNPAID'" @click="handlePay(order._id)">
                     立即支付
                   </Button>
                 </div>

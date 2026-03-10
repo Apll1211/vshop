@@ -23,8 +23,7 @@ import {
   Plus,
   ChevronRight,
 } from 'lucide-vue-next'
-import { getProductDetail } from '@/api/product'
-import { addCollect, cancelCollect } from '@/api/collect'
+import { getProductDetail, addCollect, cancelCollect } from '@/api'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
 import { toast } from 'vue-sonner'
@@ -42,7 +41,7 @@ const currentImageIndex = ref(0)
 const selectedAttrs = ref<Record<string, string>>({})
 const isFavorite = ref(false)
 
-const skuInfo = computed<SkuInfo | null>(() => product.value?.skuInfo || null)
+const skuInfo = computed<SkuInfo | any>(() => product.value?.skuInfo || null)
 const spuSaleAttrList = computed<SpuSaleAttr[]>(() => product.value?.spuSaleAttrList || [])
 const images = computed(() => {
   if (!skuInfo.value?.skuImageList) return []
@@ -68,7 +67,7 @@ onMounted(async () => {
       // 初始化选中属性
       if (spuSaleAttrList.value.length > 0) {
         spuSaleAttrList.value.forEach(attr => {
-          if (attr.spuSaleAttrValueList.length > 0) {
+          if (attr.spuSaleAttrValueList && attr.spuSaleAttrValueList.length > 0) {
             selectedAttrs.value[attr.saleAttrName] = attr.spuSaleAttrValueList[0]?.saleAttrValueName || ''
           }
         })
@@ -189,7 +188,7 @@ const shareProduct = () => {
             <div class="aspect-square bg-zinc-100 relative">
               <Carousel class="w-full h-full">
                 <CarouselContent>
-                  <CarouselItem v-for="(img, idx) in images" :key="img.id">
+                  <CarouselItem v-for="(img, idx) in images" :key="img.id || idx">
                     <img
                       :src="img.imgUrl"
                       :alt="skuInfo?.skuName"
@@ -206,7 +205,7 @@ const shareProduct = () => {
           <div class="flex gap-2 overflow-x-auto pb-2">
             <button
               v-for="(img, idx) in images"
-              :key="img.id"
+              :key="img.id || idx"
               class="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors"
               :class="currentImageIndex === idx ? 'border-emerald-500' : 'border-transparent'"
               @click="currentImageIndex = idx"
@@ -362,8 +361,8 @@ const shareProduct = () => {
               <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div v-if="images.length > 0" class="col-span-full">
                   <img
-                    v-for="img in images"
-                    :key="img.id"
+                    v-for="(img, idx) in images"
+                    :key="img.id || idx"
                     :src="img.imgUrl"
                     :alt="skuInfo?.skuName"
                     class="w-full rounded-lg"

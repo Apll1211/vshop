@@ -6,12 +6,13 @@ import {
   createAdmin,
   updateAdmin,
   deleteAdmin,
-} from '@/api/admin';
-import type { AdminUser } from '@/api/admin';
+} from '@/api';
+import type { AdminUser } from '@/api/types';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue';
 
 const loading = ref(false);
@@ -26,17 +27,16 @@ const editingAdmin = ref<AdminUser | null>(null);
 const formState = ref({
   adminName: '',
   password: '',
-  nickname: '',
-  email: '',
-  role: 'merchant',
+  nickName: '',
+  avatar: '',
+  role: 'merchant' as 'admin' | 'merchant',
 });
 
 const columns = [
-  { title: 'ID', dataIndex: '_id', key: '_id', width: 220 },
+  { title: '头像', dataIndex: 'avatar', key: 'avatar', width: 80 },
   { title: '用户名', dataIndex: 'adminName', key: 'adminName' },
-  { title: '昵称', dataIndex: 'nickname', key: 'nickname' },
-  { title: '邮箱', dataIndex: 'email', key: 'email' },
-  { title: '角色', dataIndex: 'role', key: 'role', width: 100 },
+  { title: '昵称', dataIndex: 'nickName', key: 'nickName' },
+  { title: '角色', dataIndex: 'role', key: 'role', width: 120 },
   { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
   { title: '操作', key: 'action', width: 150 },
 ];
@@ -61,18 +61,18 @@ const fetchAdmins = async () => {
 const handleTableChange = (pag: { current: number; pageSize: number }) => {
   pagination.current = pag.current;
   pagination.pageSize = pag.pageSize;
-  fetchAdmins();
+  // 后端接口目前似乎不支持分页查询管理员列表，这里仅做前端模拟或维持现状
 };
 
 // 打开新增/编辑弹窗
 const openModal = (admin?: AdminUser) => {
   if (admin) {
     editingAdmin.value = admin;
-      formState.value = {
+    formState.value = {
       adminName: admin.adminName,
       password: '',
-      nickname: admin.nickName || '',
-      email: admin.email || '',
+      nickName: admin.nickName || '',
+      avatar: admin.avatar || '',
       role: admin.role,
     };
   } else {
@@ -80,8 +80,8 @@ const openModal = (admin?: AdminUser) => {
     formState.value = {
       adminName: '',
       password: '',
-      nickname: '',
-      email: '',
+      nickName: '',
+      avatar: '',
       role: 'merchant',
     };
   }
@@ -90,35 +90,50 @@ const openModal = (admin?: AdminUser) => {
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!editingAdmin.value && !formState.value.adminName) {
-    message.warning('请输入用户名');
-    return;
-  }
-  if (!editingAdmin.value && !formState.value.password) {
-    message.warning('请输入密码');
-    return;
+  if (!editingAdmin.value) {
+    if (!formState.value.adminName) return message.warning('请输入用户名');
+    if (!formState.value.password) return message.warning('请输入密码');
   }
 
+  loading.value = true;
   try {
     if (editingAdmin.value) {
-      await updateAdmin(editingAdmin.value._id, {
-        nickname: formState.value.nickname,
-        email: formState.value.email,
-        role: formState.value.role as 'admin' | 'merchant',
-      });
-      message.success('修改成功');
+      const updateData: any = {
+        nickName: formState.value.nickName,
+        avatar: formState.value.avatar,
+        role: formState.value.role,
+      };
+      if (formState.value.password) {
+        updateData.password = formState.value.password;
+      }
+      const res = await updateAdmin(editingAdmin.value._id, updateData);
+      if (res.code === 200) {
+        message.success('修改成功');
+        showModal.value = false;
+        fetchAdmins();
+      } else {
+        message.error(res.message || '修改失败');
+      }
     } else {
-      await createAdmin({
+      const res = await createAdmin({
         adminName: formState.value.adminName,
         password: formState.value.password,
+        nickName: formState.value.nickName,
+        avatar: formState.value.avatar,
         role: formState.value.role,
       });
-      message.success('添加成功');
+      if (res.code === 200) {
+        message.success('添加成功');
+        showModal.value = false;
+        fetchAdmins();
+      } else {
+        message.error(res.message || '添加失败');
+      }
     }
-    showModal.value = false;
-    fetchAdmins();
-  } catch {
-    message.error('操作失败');
+  } catch (error: any) {
+    message.error(error.response?.data?.message || '操作失败');
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -132,11 +147,15 @@ const handleDelete = (admin: AdminUser) => {
     okButtonProps: { danger: true },
     onOk: async () => {
       try {
-        await deleteAdmin(admin._id);
-        message.success('删除成功');
-        fetchAdmins();
-      } catch {
-        message.error('删除失败');
+        const res = await deleteAdmin(admin._id);
+        if (res.code === 200) {
+          message.success('删除成功');
+          fetchAdmins();
+        } else {
+          message.error(res.message || '删除失败');
+        }
+      } catch (error: any) {
+        message.error(error.response?.data?.message || '删除失败');
       }
     },
   });
@@ -175,6 +194,11 @@ onMounted(() => {
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'avatar'">
+            <a-avatar :src="record.avatar">
+              <template #icon><UserOutlined /></template>
+            </a-avatar>
+          </template>
           <template v-if="column.key === 'role'">
             <a-tag :color="record.role === 'admin' ? 'red' : 'blue'">
               {{ record.role === 'admin' ? '超级管理员' : '商家' }}
@@ -191,7 +215,7 @@ onMounted(() => {
                 size="small"
                 danger
                 @click="handleDelete(record)"
-                :disabled="record.role === 'admin'"
+                :disabled="record.adminName === 'admin' || record.adminName === 'yuma'"
               >
                 <DeleteOutlined />
                 删除
@@ -210,17 +234,21 @@ onMounted(() => {
       :confirm-loading="loading"
     >
       <a-form :model="formState" layout="vertical">
-        <a-form-item label="用户名" v-if="!editingAdmin">
-          <a-input v-model:value="formState.adminName" placeholder="请输入用户名" />
+        <a-form-item label="用户名" :rules="[{ required: true }]">
+          <a-input 
+            v-model:value="formState.adminName" 
+            placeholder="请输入用户名" 
+            :disabled="!!editingAdmin"
+          />
         </a-form-item>
-        <a-form-item label="密码" v-if="!editingAdmin">
+        <a-form-item :label="editingAdmin ? '修改密码 (留空则不修改)' : '密码'" :rules="[{ required: !editingAdmin }]">
           <a-input-password v-model:value="formState.password" placeholder="请输入密码" />
         </a-form-item>
         <a-form-item label="昵称">
-          <a-input v-model:value="formState.nickname" placeholder="请输入昵称" />
+          <a-input v-model:value="formState.nickName" placeholder="请输入昵称" />
         </a-form-item>
-        <a-form-item label="邮箱">
-          <a-input v-model:value="formState.email" placeholder="请输入邮箱" />
+        <a-form-item label="头像URL">
+          <a-input v-model:value="formState.avatar" placeholder="请输入头像URL" />
         </a-form-item>
         <a-form-item label="角色">
           <a-select v-model:value="formState.role">

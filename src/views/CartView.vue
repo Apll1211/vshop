@@ -7,7 +7,7 @@ import {
 	ShoppingCart,
 	Trash2,
 } from "lucide-vue-next";
-import { computed, onMounted } from "vue";
+import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { Badge } from "@/components/ui/badge";
@@ -188,7 +188,7 @@ const goShopping = () => {
                   </TableCell>
                   <TableCell class="text-center">
                     <span class="text-rose-500 font-bold">
-                      ¥{{ formatPrice(parseFloat(item.skuPrice) * item.skuNum) }}
+                      ¥{{ formatPrice(parseFloat(item.skuPrice.toString()) * item.skuNum) }}
                     </span>
                   </TableCell>
                   <TableCell>

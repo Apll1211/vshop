@@ -7,8 +7,8 @@ import {
   updateAdv,
   updateAdvStatus,
   deleteAdv,
-} from '@/api/admin';
-import type { Advertisement } from '@/api/admin';
+} from '@/api';
+import type { Advertisement } from '@/api/types';
 import {
   PlusOutlined,
   EditOutlined,

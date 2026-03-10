@@ -5,8 +5,8 @@ import {
   getShopList,
   updateShop,
   deleteShop,
-} from '@/api/admin';
-import type { Shop } from '@/api/admin';
+} from '@/api';
+import type { Shop } from '@/api/types';
 import {
   EditOutlined,
   DeleteOutlined,

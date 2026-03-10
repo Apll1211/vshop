@@ -1,46 +1,58 @@
-import request from './request'
-import type { OrderListResponse, SubmitOrderParams, ApiResponse, UserAddress } from './types'
+import request from './request';
+import type { OrderListResponse, SubmitOrderParams, ApiResponse, Order } from './types';
+
+// ==================== 用户订单 API ====================
+
+// 获取交易页信息 (下单前获取地址和购物车商品信息)
+export function getTradeInfo() {
+  return request.get<ApiResponse>('/api/order/auth/trade');
+}
 
 // 提交订单
 export function submitOrder(data: SubmitOrderParams) {
-  return request.post<ApiResponse<{ orderId: string }>>('/api/order/auth/submitOrder', data)
+  return request.post<ApiResponse<string>>('/api/order/auth/submitOrder', data);
 }
 
-// 获取订单列表
-export function getOrderList(pageNo: number = 1, pageSize: number = 10) {
-  return request.get<OrderListResponse>(`/api/order/auth/${pageNo}/${pageSize}`)
+// 获取我的订单
+export function getMyOrderList(pageNo: number = 1, pageSize: number = 10, status?: string) {
+  return request.get<OrderListResponse>(`/api/order/auth/${pageNo}/${pageSize}`, { params: { status } });
 }
 
 // 获取订单详情
 export function getOrderDetail(orderId: string) {
-  return request.get(`/api/order/auth/detail/${orderId}`)
+  return request.get<ApiResponse<Order>>(`/api/order/auth/detail/${orderId}`);
 }
 
 // 取消订单
 export function cancelOrder(orderId: string) {
-  return request.put(`/api/order/auth/cancel/${orderId}`)
+  return request.put<ApiResponse>(`/api/order/auth/cancel/${orderId}`);
 }
 
-// 获取支付信息（微信支付二维码）
+// 删除订单
+export function deleteOrder(id: string) {
+  return request.delete<ApiResponse>(`/api/order/deleteAuth/${id}`);
+}
+
+// ==================== 支付 API ====================
+
+// 获取支付信息 (微信支付二维码)
 export function getPayInfo(orderId: string) {
-  return request.get<ApiResponse<{ codeUrl: string; orderId: string; totalAmount: string }>>(
-    `/api/payment/weixin/createNative/${orderId}`,
-  )
+  return request.get<ApiResponse<string>>(`/api/payment/weixin/createNative/${orderId}`);
 }
 
 // 查询支付状态
 export function queryPayStatus(orderId: string) {
-  return request.get<ApiResponse<{ tradeState: string; transactionId?: string }>>(
-    `/api/payment/weixin/queryPayStatus/${orderId}`,
-  )
+  return request.get<ApiResponse>(`/api/payment/weixin/queryPayStatus/${orderId}`);
 }
 
-// 获取用户地址列表
-export function getAddressList() {
-  return request.get<ApiResponse<UserAddress[]>>('/api/user/userAddress/auth/findUserAddressList')
-}
-
-// 支付订单
+// 支付订单 (通用支付接口)
 export function payOrder(orderId: string, paymentMethod: number = 1) {
-  return request.post<ApiResponse<{ payUrl: string }>>(`/api/order/auth/pay/${orderId}/${paymentMethod}`)
+  return request.post<ApiResponse<{ payUrl: string }>>(`/api/order/auth/pay/${orderId}/${paymentMethod}`);
 }
+
+// ==================== 后台管理 API ====================
+
+// 获取订单列表 (后台)
+export const getAdminOrderList = (params?: { tradeNo?: string; consignee?: string; status?: string; pageNo?: number; pageSize?: number }) => {
+  return request.get<{ code: number; message: string; orderList: Order[]; pageNo: number; pageSum: number; pageSize: number; count: number }>('/order/list', { params });
+};

@@ -7,8 +7,8 @@ import {
   updateCategory,
   updateCategoryShowFlag,
   deleteCategory,
-} from '@/api/admin';
-import type { Category } from '@/api/admin';
+} from '@/api';
+import type { Category } from '@/api/types';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);
