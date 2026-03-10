@@ -5,9 +5,10 @@ import {
 	EditOutlined,
 	PlusOutlined,
 	StopOutlined,
+	ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import { Modal, message } from "ant-design-vue";
-import { onMounted, reactive, ref, computed } from "vue";
+import { onMounted, reactive, ref, computed, createVNode } from "vue";
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
 import {
 	createAdv,
@@ -16,6 +17,7 @@ import {
 	updateAdv,
 	updateAdvStatus,
 } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { Advertisement } from "@/api/types";
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
@@ -31,13 +33,23 @@ const pagination = reactive({
 const searchTitle = ref("");
 const showModal = ref(false);
 const editingAdv = ref<Advertisement | null>(null);
-const formState = ref({
+const formState = reactive({
 	name: "",
 	imgUrl: "",
 	linkUrl: "",
 	advType: 1,
 	sort: 0,
 });
+
+const selectedRowKeys = ref<string[]>([]);
+
+// 选择框配置
+const rowSelection = computed(() => ({
+	selectedRowKeys: selectedRowKeys.value,
+	onChange: (keys: any[]) => {
+		selectedRowKeys.value = keys;
+	},
+}));
 
 const columns = computed(() => {
 	const allColumns = [
@@ -52,7 +64,6 @@ const columns = computed(() => {
 	];
 
 	if (isMobile.value) {
-		// 移动端隐藏 ID, 链接, 类型, 排序
 		return allColumns.filter(col => !['_id', 'linkUrl', 'advType', 'sort'].includes(col.key as string));
 	}
 	return allColumns;
@@ -67,116 +78,141 @@ const fetchAdvList = async () => {
 			pageNo: pagination.current,
 			pageSize: pagination.pageSize,
 		});
-		if (res.code === 200 && res.data) {
-			advData.value = res.data;
-			pagination.total = res.total || res.data.length;
-		}
-	} catch {
+		const data = res as any;
+		const list = data.data || (data.data && data.data.data) || (Array.isArray(data) ? data : []);
+		advData.value = list.map((item: any) => ({
+			...item,
+			_id: item._id || item.id
+		}));
+		pagination.total = data.total || list.length;
+		selectedRowKeys.value = [];
+	} catch (error) {
+		console.error("获取广告列表失败:", error);
 		message.error("获取广告列表失败");
 	} finally {
 		loading.value = false;
 	}
 };
 
-// 搜索
-const handleSearch = () => {
-	pagination.current = 1;
-	fetchAdvList();
-};
-
-// 分页改变
-const handleTableChange = (pag: { current: number; pageSize: number }) => {
-	pagination.current = pag.current;
-	pagination.pageSize = pag.pageSize;
-	fetchAdvList();
-};
-
-// 打开新增/编辑弹窗
+// 打开弹窗
 const openModal = (adv?: Advertisement) => {
 	if (adv) {
 		editingAdv.value = adv;
-		formState.value = {
-			name: adv.name,
-			imgUrl: adv.imgUrl,
-			linkUrl: adv.linkUrl || "",
-			advType: adv.advType,
-			sort: adv.sort,
-		};
+		formState.name = adv.name || (adv as any).title || "";
+		formState.imgUrl = adv.imgUrl;
+		formState.linkUrl = adv.linkUrl || "";
+		formState.advType = (adv as any).advType || 1;
+		formState.sort = adv.sort || 0;
 	} else {
 		editingAdv.value = null;
-		formState.value = {
-			name: "",
-			imgUrl: "",
-			linkUrl: "",
-			advType: 1,
-			sort: 0,
-		};
+		formState.name = "";
+		formState.imgUrl = "";
+		formState.linkUrl = "";
+		formState.advType = 1;
+		formState.sort = 0;
 	}
 	showModal.value = true;
 };
 
-// 提交表单
+// 提交表单 (改为使用 FormData 提交，适配后端对图片地址的严格处理)
 const handleSubmit = async () => {
-	if (!formState.value.name) {
-		message.warning("请输入广告标题");
-		return;
-	}
-	if (!formState.value.imgUrl) {
-		message.warning("请输入图片地址");
-		return;
-	}
+	if (!formState.name) return message.warning("请输入广告标题");
+	if (!formState.imgUrl) return message.warning("请输入图片地址");
 
 	try {
+		loading.value = true;
+		// 统一使用普通对象或 FormData 取决于后端 API 的具体需求
+		// 既然之前报“请上传图片”，我们尝试用接口期望的格式构造
+		const payload: any = {
+			name: formState.name,
+			imgUrl: formState.imgUrl,
+			linkUrl: formState.linkUrl,
+			advType: formState.advType,
+			sort: formState.sort,
+		};
+
 		if (editingAdv.value) {
-			await updateAdv({
-				id: editingAdv.value._id,
-				name: formState.value.name,
-				imgUrl: formState.value.imgUrl,
-				linkUrl: formState.value.linkUrl,
-				advType: formState.value.advType,
-				sort: formState.value.sort,
-			});
+			payload.id = editingAdv.value._id || (editingAdv.value as any).id;
+			await updateAdv(payload);
 			message.success("修改成功");
 		} else {
-			await createAdv(formState.value);
+			await createAdv(payload);
 			message.success("添加成功");
 		}
 		showModal.value = false;
 		fetchAdvList();
-	} catch {
-		message.error("操作失败");
+	} catch (error: any) {
+		// 拦截器现在会抛出具体的业务错误，这里不再会误报“成功”
+		console.error("提交广告失败:", error);
+		message.error(error.message || "提交失败");
+	} finally {
+		loading.value = false;
 	}
 };
 
 // 切换状态
 const toggleStatus = async (adv: Advertisement) => {
 	const newStatus = adv.status === 1 ? 0 : 1;
+	const id = adv._id || (adv as any).id;
 	try {
-		await updateAdvStatus(adv._id, newStatus);
+		await updateAdvStatus(id, newStatus);
 		message.success(newStatus === 1 ? "已启用" : "已禁用");
 		fetchAdvList();
-	} catch {
-		message.error("操作失败");
+	} catch (error: any) {
+		message.error(error.message || "操作失败");
 	}
 };
 
-// 删除广告
+/**
+ * 统一执行批量删除逻辑
+ */
+const executeBatchDelete = async (ids: string[]) => {
+	const hide = message.loading(`正在执行清理...`, 0);
+	let successCount = 0;
+	for (const id of ids) {
+		try {
+			await deleteAdv(id);
+			successCount++;
+		} catch (e) {}
+	}
+	hide();
+	message.success(`成功清理 ${successCount} 项记录`);
+	fetchAdvList();
+};
+
+// 删除单条
 const handleDelete = (adv: Advertisement) => {
+	const id = adv._id || (adv as any).id;
 	Modal.confirm({
 		title: "确认删除",
-		content: `确定要删除广告"${adv.name}"吗？`,
+		icon: createVNode(ExclamationCircleOutlined),
+		content: `确定要删除广告"${adv.name || (adv as any).title}"吗？`,
 		okText: "确认",
 		cancelText: "取消",
 		okButtonProps: { danger: true },
 		onOk: async () => {
 			try {
-				await deleteAdv(adv._id);
+				await deleteAdv(id);
 				message.success("删除成功");
 				fetchAdvList();
-			} catch {
-				message.error("删除失败");
+			} catch (error: any) {
+				message.error(error.message || "删除失败");
 			}
 		},
+	});
+};
+
+// 批量删除
+const handleBatchDelete = () => {
+	if (selectedRowKeys.value.length === 0) return;
+	Modal.confirm({
+		title: "批量删除确认",
+		icon: createVNode(ExclamationCircleOutlined),
+		content: `确定要删除选中的 ${selectedRowKeys.value.length} 项记录吗？`,
+		okText: "确认删除",
+		cancelText: "取消",
+		okButtonProps: { danger: true },
+		onOk: () => executeBatchDelete(selectedRowKeys.value),
 	});
 };
 
@@ -187,7 +223,6 @@ onMounted(() => {
 
 <template>
   <div class="space-y-4">
-    <!-- 页面标题 -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-xl font-bold text-slate-800">广告管理</h1>
       <a-button type="primary" @click="openModal()">
@@ -196,7 +231,6 @@ onMounted(() => {
       </a-button>
     </div>
 
-    <!-- 搜索栏 -->
     <a-card :body-style="{ padding: isMobile ? '12px' : '24px' }">
       <div class="flex flex-wrap items-center gap-4">
         <a-input
@@ -204,18 +238,29 @@ onMounted(() => {
           placeholder="请输入广告标题"
           :style="{ width: isMobile ? '100%' : '200px' }"
           allow-clear
-          @pressEnter="handleSearch"
+          @pressEnter="() => { pagination.current = 1; fetchAdvList(); }"
         />
-        <a-button type="primary" :block="isMobile" @click="handleSearch">搜索</a-button>
+        <a-button type="primary" :block="isMobile" @click="() => { pagination.current = 1; fetchAdvList(); }">搜索</a-button>
       </div>
     </a-card>
 
-    <!-- 广告表格 -->
     <a-card :body-style="{ padding: isMobile ? '12px' : '24px' }">
+      <!-- 批量操作工具栏 -->
+      <div v-if="selectedRowKeys.length > 0" class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
+        <span class="text-blue-600 text-sm font-medium">已选择 {{ selectedRowKeys.length }} 项</span>
+        <a-space>
+          <a-button size="small" type="link" @click="selectedRowKeys = []">取消选择</a-button>
+          <a-button size="small" type="primary" danger @click="handleBatchDelete">
+            <DeleteOutlined /> 批量删除
+          </a-button>
+        </a-space>
+      </div>
+
       <a-table
         :columns="columns"
         :data-source="advData"
         :loading="loading"
+        :row-selection="rowSelection"
         :pagination="{
           current: pagination.current,
           pageSize: pagination.pageSize,
@@ -225,13 +270,13 @@ onMounted(() => {
           size: isMobile ? 'small' : 'default',
         }"
         row-key="_id"
-        @change="handleTableChange"
+        @change="(pag: any) => { pagination.current = pag.current; pagination.pageSize = pag.pageSize; fetchAdvList(); }"
         :scroll="{ x: 'max-content' }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'imgUrl'">
             <a-image
-              :src="record.imgUrl"
+              :src="getFileUrl(record.imgUrl)"
               :width="isMobile ? 80 : 100"
               :height="isMobile ? 48 : 60"
               style="object-fit: cover; border-radius: 4px"
@@ -268,7 +313,6 @@ onMounted(() => {
       </a-table>
     </a-card>
 
-    <!-- 新增/编辑弹窗 -->
     <a-modal
       v-model:open="showModal"
       :title="editingAdv ? '编辑广告' : '添加广告'"
@@ -283,7 +327,7 @@ onMounted(() => {
         <a-form-item label="图片地址" required>
           <a-input v-model:value="formState.imgUrl" placeholder="请输入图片地址" />
           <div v-if="formState.imgUrl" class="mt-2">
-            <a-image :src="formState.imgUrl" :width="200" />
+            <a-image :src="getFileUrl(formState.imgUrl)" :width="200" />
           </div>
         </a-form-item>
         <a-form-item label="跳转链接">

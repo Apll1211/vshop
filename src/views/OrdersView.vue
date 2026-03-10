@@ -10,6 +10,7 @@ import {
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { getMyOrderList } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { Order } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -143,7 +144,7 @@ onMounted(() => {
               
               <div class="space-y-3">
                 <div v-for="item in order.orderDetailList" :key="item.id" class="flex gap-4">
-                  <img :src="item.imgUrl || '/placeholder.png'" class="w-16 h-16 rounded-lg object-cover" />
+                  <img :src="getFileUrl(item.imgUrl)" class="w-16 h-16 rounded-lg object-cover" />
                   <div class="flex-1 min-w-0">
                     <p class="font-medium text-zinc-800 line-clamp-1">{{ item.skuName }}</p>
                     <p class="text-sm text-zinc-500 mt-1">数量: {{ item.skuNum }}</p>

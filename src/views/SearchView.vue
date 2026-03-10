@@ -11,7 +11,9 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { searchProducts } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { ProductInfo } from "@/api/types";
+import ProductCard from "@/components/ProductCard.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,8 +67,9 @@ const fetchData = async () => {
 		});
 		if (res) {
 			const data = res as any;
-			products.value = data.data || [];
-			total.value = data.total || 0;
+			// 兼容不同响应结构
+			products.value = data.data?.data || data.data || [];
+			total.value = data.data?.total || data.total || 0;
 		}
 	} catch (error) {
 		console.error("搜索失败:", error);
@@ -117,7 +120,7 @@ const handleFilter = () => {
 	fetchData();
 };
 
-const goToDetail = (id: number) => {
+const goToDetail = (id: string) => {
 	router.push({ name: "product-detail", params: { id } });
 };
 
@@ -126,9 +129,9 @@ const handleQuickSearch = (searchKeyword: string) => {
 	handleSearch();
 };
 
-const addToCart = async (productId: number) => {
+const addToCart = async (productId: string) => {
 	try {
-		await cartStore.addToCartAction(String(productId), 1);
+		await cartStore.addToCartAction(productId, 1);
 		toast.success("已添加到购物车");
 	} catch (error) {
 		toast.error("添加失败");
@@ -211,67 +214,32 @@ const addToCart = async (productId: number) => {
 
           <!-- 网格视图 -->
           <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Card
+            <ProductCard
               v-for="product in products"
-              :key="product.id"
-              class="group cursor-pointer overflow-hidden hover:shadow-lg transition-shadow"
-              @click="goToDetail(product.id)"
-            >
-              <div class="aspect-square bg-zinc-100 relative overflow-hidden">
-                <img
-                  :src="product.defaultImg || '/placeholder.png'"
-                  :alt="product.name"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div class="absolute top-2 left-2">
-                  <Badge v-if="product.hotScore && product.hotScore > 80" variant="destructive" class="text-xs">
-                    热卖
-                  </Badge>
-                </div>
-              </div>
-              <CardContent class="p-4">
-                <h3 class="font-medium text-zinc-800 line-clamp-2 group-hover:text-emerald-600 transition-colors">
-                  {{ product.name }}
-                </h3>
-                <div class="flex items-baseline gap-2 mt-2">
-                  <span class="text-lg font-bold text-rose-500">¥{{ formatPrice(product.price) }}</span>
-                  <span v-if="product.originalPrice" class="text-sm text-zinc-400 line-through">
-                    ¥{{ formatPrice(product.originalPrice) }}
-                  </span>
-                </div>
-                <div class="flex items-center justify-between mt-3">
-                  <span class="text-xs text-zinc-400">{{ product.hotScore || 0 }} 人已购买</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    @click.stop="addToCart(product.id)"
-                  >
-                    加入购物车
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              :key="product._id || product.id"
+              :product="product"
+            />
           </div>
 
           <!-- 列表视图 -->
           <div v-else class="space-y-4">
             <Card
               v-for="product in products"
-              :key="product.id"
+              :key="product._id || product.id"
               class="group cursor-pointer overflow-hidden hover:shadow-lg transition-shadow"
-              @click="goToDetail(product.id)"
+              @click="goToDetail(product._id || product.id)"
             >
               <CardContent class="p-4 flex gap-4">
                 <div class="w-32 h-32 bg-zinc-100 rounded-lg overflow-hidden flex-shrink-0">
                   <img
-                    :src="product.defaultImg || '/placeholder.png'"
+                    :src="getFileUrl(product.defaultImg)"
                     :alt="product.name"
                     class="w-full h-full object-cover"
                   />
                 </div>
                 <div class="flex-1 min-w-0">
                   <h3 class="font-medium text-zinc-800 line-clamp-2 group-hover:text-emerald-600 transition-colors">
-                    {{ product.name }}
+                    {{ product.name || product.title }}
                   </h3>
                   <div class="flex items-baseline gap-2 mt-2">
                     <span class="text-lg font-bold text-rose-500">¥{{ formatPrice(product.price) }}</span>
@@ -284,7 +252,7 @@ const addToCart = async (productId: number) => {
                     variant="outline"
                     size="sm"
                     class="mt-3"
-                    @click.stop="addToCart(product.id)"
+                    @click.stop="addToCart(product._id || product.id)"
                   >
                     加入购物车
                   </Button>

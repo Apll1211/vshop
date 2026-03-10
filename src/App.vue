@@ -35,7 +35,7 @@ const isAdminPage = computed(() => {
       <TheFooter />
     </template>
 
-    <Toaster position="top-center" />
+    <Toaster v-if="!isAdminPage" position="top-center" />
   </div>
 </template>
 

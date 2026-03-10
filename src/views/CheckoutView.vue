@@ -12,6 +12,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { getAddressList, submitOrder } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { UserAddress } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,13 +79,16 @@ const handleSubmit = async () => {
 			skuNum: item.skuNum,
 		}));
 
+		const addr = selectedAddress.value;
+		const fullAddress = `${addr?.provinceName || ""}${addr?.cityName || ""}${addr?.districtName || ""}${addr?.detailAddress || ""}`;
+
 		const res = (await submitOrder({
 			addressId: selectedAddressId.value,
 			skuInfoList,
 			paymentMethod: paymentMethod.value,
-			consignee: selectedAddress.value?.consignee || "",
-			consigneeTel: selectedAddress.value?.phone || "",
-			deliveryAddress: selectedAddress.value?.detailAddress || "",
+			consignee: addr?.consignee || "",
+			consigneeTel: addr?.phone || "",
+			deliveryAddress: fullAddress,
 			paymentWay: paymentMethod.value === 1 ? "支付宝" : "微信",
 		})) as any;
 
@@ -220,7 +224,7 @@ onMounted(() => {
                   class="flex gap-4 py-3 border-b last:border-b-0"
                 >
                   <img
-                    :src="item.imgUrl || '/placeholder.png'"
+                    :src="getFileUrl(item.imgUrl)"
                     :alt="item.skuName"
                     class="w-16 h-16 rounded-lg object-cover"
                   />
@@ -247,7 +251,7 @@ onMounted(() => {
               <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
                   <span class="text-zinc-500">商品金额</span>
-                  <span>¥{{ cartStore.totalPrice.toFixed(2) }}</span>
+                  <span>¥{{ (cartStore.totalPrice / 100).toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-zinc-500">运费</span>
@@ -263,7 +267,7 @@ onMounted(() => {
                 <div class="flex justify-between items-baseline">
                   <span class="text-zinc-500">应付总额</span>
                   <span class="text-2xl font-bold text-rose-500">
-                    ¥{{ cartStore.totalPrice.toFixed(2) }}
+                    ¥{{ (cartStore.totalPrice / 100).toFixed(2) }}
                   </span>
                 </div>
               </div>

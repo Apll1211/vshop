@@ -2,240 +2,427 @@
 import {
 	AppstoreOutlined,
 	DashboardOutlined,
+	EyeInvisibleOutlined,
+	EyeOutlined,
 	FileTextOutlined,
+	HistoryOutlined,
+	HomeOutlined,
 	LogoutOutlined,
 	MenuFoldOutlined,
 	MenuUnfoldOutlined,
 	PictureOutlined,
 	ShopOutlined,
 	ShoppingOutlined,
-	TagsOutlined,
-	TeamOutlined,
+	TrademarkOutlined,
 	UserOutlined,
 } from "@ant-design/icons-vue";
 import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
-import { message } from "ant-design-vue";
+import { Layout, Menu, Modal, message } from "ant-design-vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { getFileUrl } from "@/api/request";
 import { useAdminStore } from "@/stores/admin";
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const adminStore = useAdminStore();
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = breakpoints.smaller("md");
 
+const isMobile = computed(() => breakpoints.smaller("md").value);
 const collapsed = ref(false);
-const selectedKeys = ref<string[]>(["dashboard"]);
 
-// 响应式处理：移动端默认收起
 watch(
 	isMobile,
-	(mobile) => {
-		if (mobile) {
-			collapsed.value = true;
-		}
+	(val) => {
+		if (val) collapsed.value = true;
 	},
 	{ immediate: true },
 );
+
+const selectedKeys = ref<string[]>([route.name as string]);
 
 watch(
-	() => route.path,
-	(newPath) => {
-		if (newPath === "/admin") {
-			selectedKeys.value = ["dashboard"];
-		} else {
-			const key = newPath.split("/")[2];
-			if (key) {
-				selectedKeys.value = [key];
-			}
-		}
-		// 移动端点击路由后自动收起
-		if (isMobile.value) {
-			collapsed.value = true;
-		}
+	() => route.name,
+	(name) => {
+		selectedKeys.value = [name as string];
 	},
-	{ immediate: true },
 );
 
-const menuItems = computed(() => {
-	const items = [
-		{
-			key: "dashboard",
-			icon: DashboardOutlined,
-			label: "控制台",
-			path: "/admin",
-		},
-		{
-			key: "category",
-			icon: AppstoreOutlined,
-			label: "分类管理",
-			path: "/admin/category",
-		},
-		{
-			key: "brand",
-			icon: TagsOutlined,
-			label: "品牌管理",
-			path: "/admin/brand",
-		},
-		{
-			key: "product",
-			icon: ShoppingOutlined,
-			label: "商品管理",
-			path: "/admin/product",
-		},
-		{
-			key: "advertisement",
-			icon: PictureOutlined,
-			label: "广告管理",
-			path: "/admin/advertisement",
-		},
-		{ key: "shop", icon: ShopOutlined, label: "店铺管理", path: "/admin/shop" },
-	];
-	if (adminStore.isAdmin) {
-		items.push({
-			key: "admin-user",
-			icon: TeamOutlined,
-			label: "管理员管理",
-			path: "/admin/admin-user",
-		});
-		items.push({
-			key: "log",
-			icon: FileTextOutlined,
-			label: "操作日志",
-			path: "/admin/log",
-		});
-	}
-	return items;
-});
-
 const handleMenuClick = ({ key }: { key: string }) => {
-	const item = menuItems.value.find((i) => i.key === key);
-	if (item) router.push(item.path);
+	router.push({ name: key });
+	if (isMobile.value) collapsed.value = true;
 };
 
-const handleLogout = async () => {
-	await adminStore.logout();
-	message.success("已退出登录");
-	router.push("/admin/login");
+const goHome = () => {
+	router.push("/");
 };
 
-const handleBackToStore = () => {
-	window.location.href = "/";
+const handleLogout = () => {
+	Modal.confirm({
+		title: "确认退出",
+		content: "确定要退出登录吗？",
+		onOk: async () => {
+			await adminStore.logout();
+			router.push("/admin/login");
+			message.success("已退出登录");
+		},
+	});
 };
 
-onMounted(async () => {
-	if (!adminStore.user) await adminStore.fetchAdminInfo();
+onMounted(() => {
+	if (!adminStore.isLoggedIn) {
+		router.push("/admin/login");
+	}
 });
 </script>
 
 <template>
-  <a-layout class="h-screen overflow-hidden">
-    <!-- Sider -->
+  <a-layout class="admin-main-layout">
+    <!-- 侧边栏：采用 Flex 布局以固定底部 -->
     <a-layout-sider
       v-model:collapsed="collapsed"
       :trigger="null"
       collapsible
-      theme="dark"
-      class="bg-slate-900 shadow-xl z-20"
-      :width="240"
       :collapsed-width="isMobile ? 0 : 80"
-      :class="[isMobile && !collapsed ? 'absolute h-full' : '']"
+      :width="220"
+      theme="dark"
+      class="admin-side-bar"
     >
-      <div class="h-16 flex items-center justify-center border-b border-slate-700">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-            <span class="text-white font-bold">Z</span>
+      <div class="sider-flex-container">
+        <!-- 1. Logo 区域 -->
+        <div class="logo-container">
+          <img src="@/assets/logo-m.svg" class="logo-img" />
+          <span v-if="!collapsed" class="logo-text">南渡后台</span>
+        </div>
+        
+        <!-- 2. 菜单区域：自适应填充剩余空间 -->
+        <div class="menu-container">
+          <a-menu
+            v-model:selectedKeys="selectedKeys"
+            theme="dark"
+            mode="inline"
+            @click="handleMenuClick"
+          >
+            <a-menu-item key="admin-dashboard">
+              <template #icon><DashboardOutlined /></template>
+              <span>工作台</span>
+            </a-menu-item>
+            
+            <a-menu-item key="admin-category">
+              <template #icon><AppstoreOutlined /></template>
+              <span>分类管理</span>
+            </a-menu-item>
+            
+            <a-menu-item key="admin-brand">
+              <template #icon><TrademarkOutlined /></template>
+              <span>品牌管理</span>
+            </a-menu-item>
+            
+            <a-menu-item key="admin-product">
+              <template #icon><ShoppingOutlined /></template>
+              <span>商品管理</span>
+            </a-menu-item>
+
+            <a-menu-item key="admin-shop">
+              <template #icon><ShopOutlined /></template>
+              <span>店铺管理</span>
+            </a-menu-item>
+            
+            <a-menu-item key="admin-advertisement">
+              <template #icon><PictureOutlined /></template>
+              <span>广告管理</span>
+            </a-menu-item>
+
+            <a-menu-item key="admin-log">
+              <template #icon><HistoryOutlined /></template>
+              <span>操作日志</span>
+            </a-menu-item>
+            
+            <a-menu-item key="admin-user">
+              <template #icon><UserOutlined /></template>
+              <span>管理员管理</span>
+            </a-menu-item>
+          </a-menu>
+        </div>
+
+        <!-- 3. 底部操作区域 -->
+        <div class="sider-footer">
+          <div class="footer-action-item" @click="goHome" :title="collapsed ? '返回前台' : ''">
+            <HomeOutlined class="action-icon" />
+            <span v-if="!collapsed" class="action-text">返回商城</span>
           </div>
-          <span v-if="!collapsed" class="text-white font-semibold text-lg">南渡商城</span>
         </div>
       </div>
-      <a-menu
-        v-model:selectedKeys="selectedKeys"
-        theme="dark"
-        mode="inline"
-        class="bg-transparent border-r-0"
-        @click="handleMenuClick"
-      >
-        <a-menu-item v-for="item in menuItems" :key="item.key">
-          <component :is="item.icon" />
-          <span>{{ item.label }}</span>
-        </a-menu-item>
-      </a-menu>
     </a-layout-sider>
 
-    <a-layout class="flex flex-col h-full overflow-hidden">
-      <!-- Header -->
-      <a-layout-header class="bg-white px-4 md:px-6 flex items-center justify-between shadow-sm h-16 shrink-0 z-10">
-        <div class="flex items-center gap-2 md:gap-4">
-          <a-button type="text" @click="collapsed = !collapsed" class="mobile-toggle-btn">
+    <a-layout class="admin-content-layout">
+      <!-- 顶部 Header -->
+      <a-layout-header class="admin-header">
+        <div class="header-left">
+          <div class="collapse-trigger" @click="collapsed = !collapsed">
             <MenuUnfoldOutlined v-if="collapsed" />
             <MenuFoldOutlined v-else />
-          </a-button>
-          <span v-if="isMobile" class="text-slate-800 font-bold truncate max-w-[120px]">
-            {{ menuItems.find(i => i.key === selectedKeys[0])?.label || '控制台' }}
-          </span>
+          </div>
+          <h2 class="page-title">
+            {{ route.meta.title?.split(' - ')[0] || '系统管理' }}
+          </h2>
         </div>
-        <div class="flex items-center gap-2 md:gap-4">
-          <a-button type="link" @click="handleBackToStore" class="text-slate-600 px-2 md:px-4 text-sm md:text-base">返回商城</a-button>
+
+        <div class="header-right">
+          <a-tooltip :title="adminStore.stealthMode ? '隐身模式已开启' : '隐身模式已关闭'">
+            <div 
+              class="stealth-mode-btn"
+              :class="{ 'active': adminStore.stealthMode }"
+              @click="adminStore.toggleStealthMode"
+            >
+              <EyeInvisibleOutlined v-if="adminStore.stealthMode" />
+              <EyeOutlined v-else />
+            </div>
+          </a-tooltip>
+
           <a-dropdown>
-            <div class="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-2 md:px-3 py-2 rounded-lg">
-              <a-avatar :size="28" class="bg-blue-500 shrink-0">
+            <div class="admin-user-info">
+              <a-avatar :size="28" :src="getFileUrl(adminStore.user?.avatar)">
                 <template #icon><UserOutlined /></template>
               </a-avatar>
-              <span class="text-slate-700 hidden sm:inline">{{ adminStore.user?.nickName || adminStore.user?.adminName }}</span>
+              <span class="user-name">{{ adminStore.user?.nickName || adminStore.user?.adminName }}</span>
             </div>
             <template #overlay>
               <a-menu>
-                <a-menu-item key="profile"><UserOutlined /><span class="ml-2">个人信息</span></a-menu-item>
-                <a-menu-divider />
-                <a-menu-item key="logout" @click="handleLogout" class="text-red-500"><LogoutOutlined /><span class="ml-2">退出登录</span></a-menu-item>
+                <a-menu-item key="logout" @click="handleLogout" danger>
+                  <template #icon><LogoutOutlined /></template>
+                  退出登录
+                </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
         </div>
       </a-layout-header>
 
-      <!-- Content -->
-      <a-layout-content class="p-3 md:p-6 overflow-y-auto bg-slate-100 custom-scrollbar relative">
-        <!-- 移动端侧边栏展开时的遮罩层 -->
-        <div 
-          v-if="isMobile && !collapsed" 
-          class="fixed inset-0 bg-black/50 z-10"
-          @click="collapsed = true"
-        ></div>
-        
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+      <!-- 主要内容区域 -->
+      <a-layout-content class="admin-page-content">
+        <div class="content-wrapper">
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
+        </div>
       </a-layout-content>
     </a-layout>
   </a-layout>
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.admin-main-layout {
+  min-height: 100vh;
+}
 
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.admin-side-bar {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  background: #001529;
+}
 
-.mobile-toggle-btn {
-  color: white !important;
-  background-color: #0f172a !important; /* 与侧边栏颜色一致 */
-  border-radius: 6px;
+/* 侧边栏 Flex 容器 */
+.sider-flex-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.logo-container {
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-:deep(.ant-layout-sider-dark) {
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+.logo-img {
+  width: 32px;
+  height: 32px;
 }
-:deep(.ant-menu-dark .ant-menu-item-selected) {
-  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%) !important;
+
+.logo-text {
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.menu-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 隐藏滚动条但保留功能 */
+.menu-container::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* 侧边栏底部 */
+.sider-footer {
+  padding: 12px 0;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.footer-action-item {
+  height: 40px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.65);
+  transition: all 0.3s;
+}
+
+.footer-action-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.action-icon {
+  font-size: 16px;
+}
+
+.action-text {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* 折叠状态样式 */
+:deep(.ant-layout-sider-collapsed) .footer-action-item {
+  padding: 0;
+  justify-content: center;
+}
+
+.admin-content-layout {
+  background: #f0f2f5;
+}
+
+.admin-header {
+  background: white;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 90;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.collapse-trigger {
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 12px;
+  margin-right: 16px;
+  transition: color 0.3s;
+}
+
+.collapse-trigger:hover {
+  color: #1890ff;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stealth-mode-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.3s;
+}
+
+.stealth-mode-btn:hover {
+  background: #f5f5f5;
+}
+
+.stealth-mode-btn.active {
+  background: #f9f0ff;
+  color: #722ed1;
+  box-shadow: 0 0 8px rgba(114, 46, 209, 0.15);
+}
+
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.admin-user-info:hover {
+  background: #f5f5f5;
+}
+
+.user-name {
+  color: #666;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-page-content {
+  padding: 24px;
+  min-height: 280px;
+}
+
+.content-wrapper {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  min-height: 100%;
+}
+
+@media (max-width: 768px) {
+  .admin-page-content {
+    padding: 12px;
+  }
+  .content-wrapper {
+    padding: 16px;
+  }
+  .user-name {
+    display: none;
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

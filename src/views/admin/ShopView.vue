@@ -3,25 +3,32 @@ import {
 	CheckCircleOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	ExclamationCircleOutlined,
 	StopOutlined,
 } from "@ant-design/icons-vue";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { Modal, message } from "ant-design-vue";
-import { onMounted, reactive, ref, computed } from "vue";
-import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
+import { computed, createVNode, onMounted, reactive, ref } from "vue";
 import { deleteShop, getShopList, updateShop } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { Shop } from "@/api/types";
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = computed(() => breakpoints.smaller('md').value);
+const isMobile = computed(() => breakpoints.smaller("md").value);
 
 const loading = ref(false);
 const shopData = ref<Shop[]>([]);
-const pagination = reactive({
-	current: 1,
-	pageSize: 10,
-	total: 0,
-});
 const searchName = ref("");
+
+const selectedRowKeys = ref<string[]>([]);
+
+// 选择框配置
+const rowSelection = computed(() => ({
+	selectedRowKeys: selectedRowKeys.value,
+	onChange: (keys: any[]) => {
+		selectedRowKeys.value = keys;
+	},
+}));
 
 const columns = computed(() => {
 	const allColumns = [
@@ -34,93 +41,111 @@ const columns = computed(() => {
 			key: "description",
 			ellipsis: true,
 		},
-		{ title: "店主", dataIndex: "ownerName", key: "ownerName", width: 120 },
 		{ title: "状态", dataIndex: "status", key: "status", width: 100 },
-		{ title: "创建时间", dataIndex: "createTime", key: "createTime", width: 180 },
-		{ title: "操作", key: "action", width: isMobile.value ? 100 : 180, fixed: isMobile.value ? undefined : 'right' },
+		{
+			title: "操作",
+			key: "action",
+			width: isMobile.value ? 120 : 200,
+			fixed: isMobile.value ? undefined : "right",
+		},
 	];
 
 	if (isMobile.value) {
-		// 移动端隐藏 ID, 描述, 店主, 创建时间
-		return allColumns.filter(col => !['_id', 'description', 'ownerName', 'createTime'].includes(col.key as string));
+		return allColumns.filter(
+			(col) => !["_id", "description"].includes(col.key as string),
+		);
 	}
 	return allColumns;
 });
 
-/**
- * 获取店铺列表
- * 从后端API获取所有店铺数据，并更新本地状态
- */
+// 获取店铺列表
 const fetchShops = async () => {
 	loading.value = true;
 	try {
 		const res = await getShopList();
-		if (res.code === 200 && res.shopList) {
-			shopData.value = res.shopList;
-			pagination.total = res.shopList.length;
-		}
-	} catch {
+		const data = res as any;
+		const list =
+			data.shopList || data.data?.shopList || (Array.isArray(data) ? data : []);
+		shopData.value = list.map((item: any) => ({
+			...item,
+			_id: item._id || item.id,
+		}));
+		selectedRowKeys.value = [];
+	} catch (error) {
+		console.error("获取店铺列表失败:", error);
 		message.error("获取店铺列表失败");
 	} finally {
 		loading.value = false;
 	}
 };
 
-/**
- * 搜索店铺
- * 重置分页并重新获取店铺列表
- */
-const handleSearch = () => {
-	pagination.current = 1;
-	fetchShops();
-};
-
-/**
- * 分页变化处理
- * @param pag - 分页参数，包含当前页码和每页条数
- */
-const handleTableChange = (pag: { current: number; pageSize: number }) => {
-	pagination.current = pag.current;
-	pagination.pageSize = pag.pageSize;
-	fetchShops();
-};
-
-/**
- * 切换店铺状态
- * @param shop - 店铺对象
- */
+// 切换状态
 const toggleStatus = async (shop: Shop) => {
 	const newStatus = shop.status === 1 ? 0 : 1;
+	const id = shop._id || shop.id;
 	try {
-		await updateShop(shop._id, { status: newStatus });
-		message.success(newStatus === 1 ? "已启用" : "已禁用");
+		// 修正：updateShop 接收 id 和 data 两个参数
+		await updateShop(id, {
+			status: newStatus,
+		});
+		message.success(newStatus === 1 ? "已开启" : "已关闭");
 		fetchShops();
-	} catch {
-		message.error("操作失败");
+	} catch (error: any) {
+		console.error("更新店铺状态失败:", error);
+		message.error(error.message || "更新失败");
 	}
 };
 
 /**
- * 删除店铺
- * 弹出确认对话框，确认后删除指定店铺
- * @param shop - 店铺对象
+ * 统一执行批量删除逻辑
  */
+const executeBatchDelete = async (ids: string[]) => {
+	const hide = message.loading(`正在执行批量删除...`, 0);
+	let successCount = 0;
+	for (const id of ids) {
+		try {
+			await deleteShop(id);
+			successCount++;
+		} catch (e) {}
+	}
+	hide();
+	message.success(`成功删除 ${successCount} 个店铺`);
+	fetchShops();
+};
+
+// 删除单条
 const handleDelete = (shop: Shop) => {
+	const id = shop._id || shop.id;
 	Modal.confirm({
 		title: "确认删除",
+		icon: createVNode(ExclamationCircleOutlined),
 		content: `确定要删除店铺"${shop.name}"吗？`,
 		okText: "确认",
 		cancelText: "取消",
 		okButtonProps: { danger: true },
 		onOk: async () => {
 			try {
-				await deleteShop(shop._id);
+				await deleteShop(id);
 				message.success("删除成功");
 				fetchShops();
-			} catch {
-				message.error("删除失败");
+			} catch (error: any) {
+				message.error(error.message || "删除失败");
 			}
 		},
+	});
+};
+
+// 批量删除
+const handleBatchDelete = () => {
+	if (selectedRowKeys.value.length === 0) return;
+	Modal.confirm({
+		title: "批量删除确认",
+		icon: createVNode(ExclamationCircleOutlined),
+		content: `确定要删除选中的 ${selectedRowKeys.value.length} 个店铺吗？`,
+		okText: "确认删除",
+		cancelText: "取消",
+		okButtonProps: { danger: true },
+		onOk: () => executeBatchDelete(selectedRowKeys.value),
 	});
 };
 
@@ -131,48 +156,36 @@ onMounted(() => {
 
 <template>
   <div class="space-y-4">
-    <!-- 页面标题 -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-xl font-bold text-slate-800">店铺管理</h1>
     </div>
 
-    <!-- 搜索栏 -->
     <a-card :body-style="{ padding: isMobile ? '12px' : '24px' }">
-      <div class="flex flex-wrap items-center gap-4">
-        <a-input
-          v-model:value="searchName"
-          placeholder="请输入店铺名称"
-          :style="{ width: isMobile ? '100%' : '200px' }"
-          allow-clear
-          @pressEnter="handleSearch"
-        />
-        <a-button type="primary" :block="isMobile" @click="handleSearch">搜索</a-button>
+      <!-- 批量操作工具栏 -->
+      <div v-if="selectedRowKeys.length > 0" class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
+        <span class="text-blue-600 text-sm font-medium">已选择 {{ selectedRowKeys.length }} 项</span>
+        <a-space>
+          <a-button size="small" type="link" @click="selectedRowKeys = []">取消选择</a-button>
+          <a-button size="small" type="primary" danger @click="handleBatchDelete">
+            <DeleteOutlined /> 批量删除
+          </a-button>
+        </a-space>
       </div>
-    </a-card>
 
-    <!-- 店铺列表表格 -->
-    <a-card :body-style="{ padding: isMobile ? '12px' : '24px' }">
       <a-table
         :columns="columns"
         :data-source="shopData"
         :loading="loading"
-        :pagination="{
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-          total: pagination.total,
-          showSizeChanger: true,
-          showTotal: (total: number) => `共 ${total} 条`,
-          size: isMobile ? 'small' : 'default',
-        }"
+        :row-selection="rowSelection"
+        :pagination="false"
         row-key="_id"
-        @change="handleTableChange"
         :scroll="{ x: 'max-content' }"
       >
         <template #bodyCell="{ column, record }">
           <!-- 店铺Logo -->
           <template v-if="column.key === 'logo'">
             <a-image
-              :src="record.logo"
+              :src="getFileUrl(record.logo)"
               :width="isMobile ? 48 : 60"
               :height="isMobile ? 48 : 60"
               style="object-fit: contain; border-radius: 4px"
@@ -180,21 +193,21 @@ onMounted(() => {
             />
           </template>
 
-          <!-- 店铺状态 -->
+          <!-- 状态展示 -->
           <template v-if="column.key === 'status'">
-            <a-tag :color="record.status === 1 ? 'green' : 'default'">
-              {{ record.status === 1 ? '正常' : '禁用' }}
+            <a-tag :color="record.status === 1 ? 'green' : 'red'">
+              {{ record.status === 1 ? '营业中' : '歇业中' }}
             </a-tag>
           </template>
 
-          <!-- 操作按钮 -->
+          <!-- 操作栏 -->
           <template v-if="column.key === 'action'">
             <a-space :size="isMobile ? 0 : 4" wrap>
               <a-button type="link" size="small" @click="toggleStatus(record)" class="px-1">
                 <template #icon>
                   <component :is="record.status === 0 ? CheckCircleOutlined : StopOutlined" />
                 </template>
-                <span v-if="!isMobile">{{ record.status === 1 ? '禁用' : '启用' }}</span>
+                <span v-if="!isMobile">{{ record.status === 1 ? '歇业' : '开业' }}</span>
               </a-button>
               <a-button type="link" size="small" danger @click="handleDelete(record)" class="px-1">
                 <template #icon><DeleteOutlined /></template>

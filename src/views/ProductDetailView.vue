@@ -14,7 +14,8 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { addCollect, cancelCollect, getProductDetail } from "@/api";
-import type { ProductDetail, SkuInfo, SpuSaleAttr } from "@/api/types";
+import { getFileUrl } from "@/api/request";
+import type { ProductDetail, Sku, SpuSaleAttr } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,16 +42,19 @@ const currentImageIndex = ref(0);
 const selectedAttrs = ref<Record<string, string>>({});
 const isFavorite = ref(false);
 
-const skuInfo = computed<SkuInfo | any>(() => product.value?.skuInfo || null);
+const skuInfo = computed<Sku | null>(() => product.value?.skuInfo || null);
 const spuSaleAttrList = computed<SpuSaleAttr[]>(
 	() => product.value?.spuSaleAttrList || [],
 );
 const images = computed(() => {
-	if (!skuInfo.value?.skuImageList) return [];
+	if (!skuInfo.value?.skuImageList || skuInfo.value.skuImageList.length === 0) {
+		const defaultImg = skuInfo.value?.skuDefaultImg || skuInfo.value?.defaultImg;
+		return defaultImg ? [{ imgUrl: defaultImg }] : [];
+	}
 	return skuInfo.value.skuImageList;
 });
 const currentPrice = computed(() => {
-	return product.value?.price || "0";
+	return skuInfo.value?.price || product.value?.price || 0;
 });
 
 const formatPrice = (price: string | number) => {
@@ -65,7 +69,9 @@ onMounted(async () => {
 	try {
 		const res = await getProductDetail(id);
 		if (res) {
+			// 后端返回可能在 res.data 中，拦截器已处理
 			product.value = res as any;
+			
 			// 初始化选中属性
 			if (spuSaleAttrList.value.length > 0) {
 				spuSaleAttrList.value.forEach((attr) => {
@@ -107,8 +113,12 @@ const addToCart = async () => {
 	if (!skuInfo.value) return;
 
 	try {
-		await cartStore.addToCartAction(skuInfo.value.id, quantity.value);
-		toast.success("已添加到购物车");
+		const success = await cartStore.addToCartAction(skuInfo.value.id || skuInfo.value._id, quantity.value);
+		if (success) {
+			toast.success("已添加到购物车");
+		} else {
+			toast.error("添加失败，请稍后重试");
+		}
 	} catch (error) {
 		toast.error("添加失败，请重试");
 	}
@@ -121,8 +131,10 @@ const buyNow = async () => {
 		return;
 	}
 
-	await addToCart();
-	router.push({ name: "checkout" });
+	const success = await cartStore.addToCartAction(skuInfo.value?.id || skuInfo.value?._id || "", quantity.value);
+	if (success) {
+		router.push({ name: "checkout" });
+	}
 };
 
 const toggleFavorite = async () => {
@@ -131,15 +143,16 @@ const toggleFavorite = async () => {
 		return;
 	}
 
-	if (!skuInfo.value) return;
+	const id = skuInfo.value?.id || skuInfo.value?._id;
+	if (!id) return;
 
 	try {
 		if (isFavorite.value) {
-			await cancelCollect(skuInfo.value.id);
+			await cancelCollect(id);
 			isFavorite.value = false;
 			toast.success("已取消收藏");
 		} else {
-			await addCollect(skuInfo.value.id);
+			await addCollect(id);
 			isFavorite.value = true;
 			toast.success("已添加收藏");
 		}
@@ -149,9 +162,10 @@ const toggleFavorite = async () => {
 };
 
 const shareProduct = () => {
+	const name = skuInfo.value?.fullName || skuInfo.value?.name || "商品详情";
 	if (navigator.share) {
 		navigator.share({
-			title: skuInfo.value?.skuName || "商品详情",
+			title: name,
 			url: window.location.href,
 		});
 	} else {
@@ -159,6 +173,8 @@ const shareProduct = () => {
 		toast.success("链接已复制到剪贴板");
 	}
 };
+
+const productName = computed(() => skuInfo.value?.fullName || skuInfo.value?.name || "商品详情");
 </script>
 
 <template>
@@ -169,7 +185,7 @@ const shareProduct = () => {
         <nav class="flex items-center gap-2 text-sm text-zinc-500">
           <router-link to="/" class="hover:text-emerald-600">首页</router-link>
           <ChevronRight class="w-4 h-4" />
-          <span class="text-zinc-800">{{ skuInfo?.skuName || '商品详情' }}</span>
+          <span class="text-zinc-800 line-clamp-1">{{ productName }}</span>
         </nav>
       </div>
     </div>
@@ -194,29 +210,29 @@ const shareProduct = () => {
             <div class="aspect-square bg-zinc-100 relative">
               <Carousel class="w-full h-full">
                 <CarouselContent>
-                  <CarouselItem v-for="(img, idx) in images" :key="img.id || idx">
+                  <CarouselItem v-for="(img, idx) in images" :key="idx">
                     <img
-                      :src="img.imgUrl"
-                      :alt="skuInfo?.skuName"
+                      :src="getFileUrl(img.imgUrl)"
+                      :alt="productName"
                       class="w-full h-full object-cover"
                     />
                   </CarouselItem>
                 </CarouselContent>
-                <CarouselPrevious class="left-2" />
-                <CarouselNext class="right-2" />
+                <CarouselPrevious class="left-2" v-if="images.length > 1" />
+                <CarouselNext class="right-2" v-if="images.length > 1" />
               </Carousel>
             </div>
           </Card>
           <!-- 缩略图 -->
-          <div class="flex gap-2 overflow-x-auto pb-2">
+          <div class="flex gap-2 overflow-x-auto pb-2" v-if="images.length > 1">
             <button
               v-for="(img, idx) in images"
-              :key="img.id || idx"
+              :key="idx"
               class="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors"
               :class="currentImageIndex === idx ? 'border-emerald-500' : 'border-transparent'"
               @click="currentImageIndex = idx"
             >
-              <img :src="img.imgUrl" class="w-full h-full object-cover" />
+              <img :src="getFileUrl(img.imgUrl)" class="w-full h-full object-cover" />
             </button>
           </div>
         </div>
@@ -225,31 +241,31 @@ const shareProduct = () => {
         <div class="space-y-6">
           <!-- 标题 -->
           <div>
-            <h1 class="text-2xl font-bold text-zinc-800 mb-2">{{ skuInfo?.skuName }}</h1>
-            <p class="text-zinc-500">{{ skuInfo?.skuDesc }}</p>
+            <h1 class="text-2xl font-bold text-zinc-800 mb-2">{{ productName }}</h1>
+            <p class="text-zinc-500 line-clamp-3">{{ skuInfo?.name }}</p>
           </div>
 
           <!-- 价格 -->
           <Card class="bg-gradient-to-r from-rose-50 to-amber-50 border-0">
             <CardContent class="p-6">
               <div class="flex items-baseline gap-2">
-                <span class="text-sm text-zinc-500">价格</span>
+                <span class="text-sm text-zinc-500">售价</span>
                 <span class="text-3xl font-bold text-rose-500">¥{{ formatPrice(currentPrice) }}</span>
               </div>
               <div class="flex gap-4 mt-3">
-                <Badge variant="outline" class="border-rose-400 text-rose-500">限时特惠</Badge>
-                <Badge variant="outline" class="border-amber-400 text-amber-500">满减优惠</Badge>
+                <Badge variant="outline" class="border-rose-400 text-rose-500">正品保障</Badge>
+                <Badge variant="outline" class="border-amber-400 text-amber-500">顺丰包邮</Badge>
               </div>
             </CardContent>
           </Card>
 
           <!-- 属性选择 -->
-          <div v-for="attr in spuSaleAttrList" :key="attr.id" class="space-y-3">
+          <div v-for="attr in spuSaleAttrList" :key="attr._id" class="space-y-3">
             <h3 class="text-sm font-medium text-zinc-700">{{ attr.saleAttrName }}</h3>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="value in attr.spuSaleAttrValueList"
-                :key="value.id"
+                :key="value._id || value.saleAttrValueName"
                 class="px-4 py-2 rounded-lg border-2 transition-all"
                 :class="isSelected(attr.saleAttrName, value.saleAttrValueName) 
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
@@ -288,7 +304,7 @@ const shareProduct = () => {
                   <Plus class="w-4 h-4" />
                 </button>
               </div>
-              <span class="text-sm text-zinc-500">库存充足</span>
+              <span class="text-sm text-zinc-500">库存: {{ skuInfo?.stock || 0 }}</span>
             </div>
           </div>
 
@@ -357,45 +373,30 @@ const shareProduct = () => {
             <TabsTrigger value="specs" class="data-[state=active]:border-b-2 data-[state=active]:border-emerald-500">
               规格参数
             </TabsTrigger>
-            <TabsTrigger value="reviews" class="data-[state=active]:border-b-2 data-[state=active]:border-emerald-500">
-              用户评价
-            </TabsTrigger>
           </TabsList>
           <TabsContent value="description" class="p-6">
             <div class="prose max-w-none">
-              <p class="text-zinc-600">{{ skuInfo?.skuDesc || '暂无商品介绍' }}</p>
-              <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div v-if="images.length > 0" class="col-span-full">
-                  <img
-                    v-for="(img, idx) in images"
-                    :key="img.id || idx"
-                    :src="img.imgUrl"
-                    :alt="skuInfo?.skuName"
-                    class="w-full rounded-lg"
-                  />
-                </div>
+              <div class="mt-4 space-y-4">
+                <img
+                  v-for="(img, idx) in images"
+                  :key="idx"
+                  :src="getFileUrl(img.imgUrl)"
+                  :alt="productName"
+                  class="w-full rounded-lg"
+                />
               </div>
             </div>
           </TabsContent>
           <TabsContent value="specs" class="p-6">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div class="bg-zinc-50 p-4 rounded-lg">
                 <dt class="text-sm text-zinc-500">商品名称</dt>
-                <dd class="mt-1 font-medium">{{ skuInfo?.skuName }}</dd>
-              </div>
-              <div class="bg-zinc-50 p-4 rounded-lg">
-                <dt class="text-sm text-zinc-500">商品描述</dt>
-                <dd class="mt-1 font-medium">{{ skuInfo?.skuDesc || '暂无' }}</dd>
+                <dd class="mt-1 font-medium">{{ productName }}</dd>
               </div>
               <div v-for="(value, key) in selectedAttrs" :key="key" class="bg-zinc-50 p-4 rounded-lg">
                 <dt class="text-sm text-zinc-500">{{ key }}</dt>
                 <dd class="mt-1 font-medium">{{ value }}</dd>
               </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="reviews" class="p-6">
-            <div class="text-center text-zinc-500 py-12">
-              暂无评价
             </div>
           </TabsContent>
         </Tabs>

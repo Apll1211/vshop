@@ -2,6 +2,7 @@
 import { motion } from "motion-v";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
+import { getFileUrl } from "@/api/request";
 import type { ProductInfo } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,8 +29,11 @@ const discountDisplay = computed(() => {
 
 // 跳转到商品详情
 function goToDetail() {
-	router.push(`/product/${props.product.id}`);
+	router.push(`/product/${props.product.id || props.product._id}`);
 }
+
+const productName = computed(() => props.product.fullName || props.product.title || props.product.name);
+const productImg = computed(() => getFileUrl(props.product.defaultImg));
 </script>
 
 <template>
@@ -44,8 +48,8 @@ function goToDetail() {
       <!-- 商品图片 -->
       <div class="relative aspect-square overflow-hidden bg-slate-100">
         <img
-          :src="product.defaultImg || '/images/placeholder.png'"
-          :alt="product.title || product.name"
+          :src="productImg"
+          :alt="productName"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />
@@ -64,19 +68,19 @@ function goToDetail() {
       <CardContent class="p-4">
         <!-- 商品名称 -->
         <h3 class="text-sm font-medium text-slate-800 line-clamp-2 min-h-[2.5rem] mb-3 group-hover:text-blue-600 transition-colors">
-          {{ product.title || product.name }}
+          {{ productName }}
         </h3>
 
         <!-- 价格信息 -->
         <div class="flex items-baseline gap-2">
           <span class="text-xl font-bold text-red-500">
-            ¥{{ product.price }}
+            ¥{{ (product.price / 100).toFixed(2) }}
           </span>
           <span
             v-if="product.originalPrice && product.originalPrice > product.price"
             class="text-xs text-slate-400 line-through"
           >
-            ¥{{ product.originalPrice }}
+            ¥{{ (product.originalPrice / 100).toFixed(2) }}
           </span>
         </div>
 

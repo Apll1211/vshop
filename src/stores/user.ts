@@ -20,9 +20,13 @@ export const useUserStore = defineStore(
 		async function loginAction(params: UserLoginParams) {
 			try {
 				const res = (await login(params)) as any;
-				if (res.data) {
-					userInfo.value = res.data as UserInfo;
-					token.value = res.data.token || "";
+				// 兼容 token 在根路径或 data 路径
+				const loginData = res.data || res;
+				const loginToken = res.token || (res.data && res.data.token);
+				
+				if (loginToken) {
+					token.value = loginToken;
+					userInfo.value = loginData as UserInfo;
 					localStorage.setItem("token", token.value);
 				}
 				return res;

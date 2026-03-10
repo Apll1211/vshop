@@ -4,11 +4,13 @@ import {
 	EditOutlined,
 	PlusOutlined,
 	UserOutlined,
+	ExclamationCircleOutlined,
 } from "@ant-design/icons-vue";
 import { Modal, message } from "ant-design-vue";
-import { onMounted, reactive, ref, computed } from "vue";
+import { onMounted, reactive, ref, computed, createVNode } from "vue";
 import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
 import { createAdmin, deleteAdmin, getAdminList, updateAdmin } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { AdminUser } from "@/api/types";
 
 const breakpoints = useBreakpoints(breakpointsTailwind);
@@ -23,13 +25,27 @@ const pagination = reactive({
 });
 const showModal = ref(false);
 const editingAdmin = ref<AdminUser | null>(null);
-const formState = ref({
+const formState = reactive({
 	adminName: "",
 	password: "",
 	nickName: "",
 	avatar: "",
 	role: "merchant" as "admin" | "merchant",
 });
+
+const selectedRowKeys = ref<string[]>([]);
+
+// 选择框配置
+const rowSelection = computed(() => ({
+	selectedRowKeys: selectedRowKeys.value,
+	onChange: (keys: any[]) => {
+		selectedRowKeys.value = keys;
+	},
+	getCheckboxProps: (record: AdminUser) => ({
+		disabled: record.adminName === 'admin' || record.adminName === 'yuma',
+		name: record.adminName,
+	}),
+}));
 
 const columns = computed(() => {
 	const allColumns = [
@@ -42,7 +58,6 @@ const columns = computed(() => {
 	];
 
 	if (isMobile.value) {
-		// 移动端隐藏 头像, 角色, 创建时间
 		return allColumns.filter(col => !['avatar', 'role', 'createTime'].includes(col.key as string));
 	}
 	return allColumns;
@@ -52,119 +67,137 @@ const columns = computed(() => {
 const fetchAdmins = async () => {
 	loading.value = true;
 	try {
+		// 补全分页参数
 		const res = await getAdminList();
-		if (res.code === 200 && res.adminList) {
-			adminData.value = res.adminList;
-			pagination.total = res.adminList.length;
-		}
-	} catch {
+		const data = res as any;
+		// 后端管理员列表可能暂时没做物理分页，前端做个模拟切片以保证 UI 正常
+		const list = data.adminList || (data.data && data.data.adminList) || [];
+		
+		const mappedList = list.map((item: any) => ({
+			...item,
+			_id: item._id || item.id
+		}));
+
+		// 如果后端没返回 total，则使用数组长度
+		pagination.total = mappedList.length;
+		
+		// 前端切片处理（防止后端未分页时界面溢出）
+		const start = (pagination.current - 1) * pagination.pageSize;
+		const end = start + pagination.pageSize;
+		adminData.value = mappedList.slice(start, end);
+		
+		selectedRowKeys.value = [];
+	} catch (error) {
+		console.error("获取管理员列表失败:", error);
 		message.error("获取管理员列表失败");
 	} finally {
 		loading.value = false;
 	}
 };
 
-// 分页改变
-const handleTableChange = (pag: { current: number; pageSize: number }) => {
+// 处理分页跳转
+const handleTableChange = (pag: any) => {
 	pagination.current = pag.current;
 	pagination.pageSize = pag.pageSize;
-	// 后端接口目前似乎不支持分页查询管理员列表，这里仅做前端模拟或维持现状
+	fetchAdmins();
 };
 
-// 打开新增/编辑弹窗
-const openModal = (admin?: AdminUser) => {
-	if (admin) {
-		editingAdmin.value = admin;
-		formState.value = {
-			adminName: admin.adminName,
-			password: "",
-			nickName: admin.nickName || "",
-			avatar: admin.avatar || "",
-			role: admin.role,
-		};
-	} else {
-		editingAdmin.value = null;
-		formState.value = {
-			adminName: "",
-			password: "",
-			nickName: "",
-			avatar: "",
-			role: "merchant",
-		};
+/**
+ * 统一执行批量删除逻辑
+ */
+const executeBatchDelete = async (ids: string[]) => {
+	const hide = message.loading(`正在执行批量删除...`, 0);
+	let successCount = 0;
+	for (const id of ids) {
+		try {
+			await deleteAdmin(id);
+			successCount++;
+		} catch (e) {}
 	}
-	showModal.value = true;
+	hide();
+	message.success(`成功删除 ${successCount} 个账号`);
+	fetchAdmins();
 };
 
 // 提交表单
 const handleSubmit = async () => {
 	if (!editingAdmin.value) {
-		if (!formState.value.adminName) return message.warning("请输入用户名");
-		if (!formState.value.password) return message.warning("请输入密码");
+		if (!formState.adminName) return message.warning("请输入用户名");
+		if (!formState.password) return message.warning("请输入密码");
 	}
 
 	loading.value = true;
 	try {
 		if (editingAdmin.value) {
 			const updateData: any = {
-				nickName: formState.value.nickName,
-				avatar: formState.value.avatar,
-				role: formState.value.role,
+				nickName: formState.nickName,
+				avatar: formState.avatar,
+				role: formState.role,
 			};
-			if (formState.value.password) {
-				updateData.password = formState.value.password;
+			if (formState.password) {
+				updateData.password = formState.password;
 			}
-			const res = await updateAdmin(editingAdmin.value._id, updateData);
-			if (res.code === 200) {
-				message.success("修改成功");
-				showModal.value = false;
-				fetchAdmins();
-			} else {
-				message.error(res.message || "修改失败");
-			}
+			const id = editingAdmin.value._id || (editingAdmin.value as any).id;
+			await updateAdmin(id, updateData);
+			message.success("修改成功");
+			showModal.value = false;
+			fetchAdmins();
 		} else {
-			const res = await createAdmin({
-				adminName: formState.value.adminName,
-				password: formState.value.password,
-				nickName: formState.value.nickName,
-				avatar: formState.value.avatar,
-				role: formState.value.role,
+			await createAdmin({
+				adminName: formState.adminName,
+				password: formState.password,
+				nickName: formState.nickName,
+				avatar: formState.avatar,
+				role: formState.role,
 			});
-			if (res.code === 200) {
-				message.success("添加成功");
-				showModal.value = false;
-				fetchAdmins();
-			} else {
-				message.error(res.message || "添加失败");
-			}
+			message.success("添加成功");
+			showModal.value = false;
+			fetchAdmins();
 		}
 	} catch (error: any) {
-		message.error(error.response?.data?.message || "操作失败");
+		console.error("提交管理员失败:", error);
+		message.error(error.message || "操作失败");
 	} finally {
 		loading.value = false;
 	}
 };
 
-// 删除管理员
+// 删除单条
 const handleDelete = (admin: AdminUser) => {
+	if (admin.adminName === 'admin' || admin.adminName === 'yuma') {
+		return message.warning("系统核心账号禁止删除");
+	}
+	const id = admin._id || (admin as any).id;
 	Modal.confirm({
 		title: "确认删除",
+		icon: createVNode(ExclamationCircleOutlined),
 		content: `确定要删除管理员"${admin.adminName}"吗？`,
 		okText: "确认",
 		cancelText: "取消",
 		okButtonProps: { danger: true },
 		onOk: async () => {
 			try {
-				const res = await deleteAdmin(admin._id);
-				if (res.code === 200) {
-					message.success("删除成功");
-					fetchAdmins();
-				} else {
-					message.error(res.message || "删除失败");
-				}
+				await deleteAdmin(id);
+				message.success("删除成功");
+				fetchAdmins();
 			} catch (error: any) {
-				message.error(error.response?.data?.message || "删除失败");
+				message.error(error.message || "删除失败");
 			}
 		},
+	});
+};
+
+// 批量删除
+const handleBatchDelete = () => {
+	if (selectedRowKeys.value.length === 0) return;
+	Modal.confirm({
+		title: "批量删除确认",
+		icon: createVNode(ExclamationCircleOutlined),
+		content: `确定要删除选中的 ${selectedRowKeys.value.length} 个管理员账号吗？`,
+		okText: "确认删除",
+		cancelText: "取消",
+		okButtonProps: { danger: true },
+		onOk: () => executeBatchDelete(selectedRowKeys.value),
 	});
 };
 
@@ -175,21 +208,31 @@ onMounted(() => {
 
 <template>
   <div class="space-y-4">
-    <!-- 页面标题 -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-xl font-bold text-slate-800">管理员管理</h1>
-      <a-button type="primary" @click="openModal()">
+      <a-button type="primary" @click="() => { editingAdmin = null; formState.adminName = ''; formState.password = ''; formState.nickName = ''; formState.avatar = ''; formState.role = 'merchant'; showModal = true; }">
         <PlusOutlined />
         添加管理员
       </a-button>
     </div>
 
-    <!-- 管理员表格 -->
     <a-card :body-style="{ padding: isMobile ? '12px' : '24px' }">
+      <!-- 批量操作工具栏 -->
+      <div v-if="selectedRowKeys.length > 0" class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
+        <span class="text-blue-600 text-sm font-medium">已选择 {{ selectedRowKeys.length }} 项</span>
+        <a-space>
+          <a-button size="small" type="link" @click="selectedRowKeys = []">取消选择</a-button>
+          <a-button size="small" type="primary" danger @click="handleBatchDelete">
+            <DeleteOutlined /> 批量删除
+          </a-button>
+        </a-space>
+      </div>
+
       <a-table
         :columns="columns"
         :data-source="adminData"
         :loading="loading"
+        :row-selection="rowSelection"
         :pagination="{
           current: pagination.current,
           pageSize: pagination.pageSize,
@@ -215,7 +258,7 @@ onMounted(() => {
           </template>
           <template v-if="column.key === 'action'">
             <a-space :size="isMobile ? 0 : 4" wrap>
-              <a-button type="link" size="small" @click="openModal(record)" class="px-1">
+              <a-button type="link" size="small" @click="() => { editingAdmin = record; formState.adminName = record.adminName; formState.password = ''; formState.nickName = record.nickName || ''; formState.avatar = record.avatar || ''; formState.role = record.role; showModal = true; }">
                 <template #icon><EditOutlined /></template>
                 <span v-if="!isMobile">编辑</span>
               </a-button>
@@ -236,7 +279,6 @@ onMounted(() => {
       </a-table>
     </a-card>
 
-    <!-- 新增/编辑弹窗 -->
     <a-modal
       v-model:open="showModal"
       :title="editingAdmin ? '编辑管理员' : '添加管理员'"
@@ -244,15 +286,15 @@ onMounted(() => {
       :confirm-loading="loading"
       :width="isMobile ? '95%' : '600px'"
     >
-      <a-form :model="formState" layout="vertical">
-        <a-form-item label="用户名" :rules="[{ required: true }]">
+      <a-form layout="vertical">
+        <a-form-item label="用户名" required>
           <a-input 
             v-model:value="formState.adminName" 
             placeholder="请输入用户名" 
             :disabled="!!editingAdmin"
           />
         </a-form-item>
-        <a-form-item :label="editingAdmin ? '修改密码 (留空则不修改)' : '密码'" :rules="[{ required: !editingAdmin }]">
+        <a-form-item :label="editingAdmin ? '修改密码 (留空则不修改)' : '密码'" :required="!editingAdmin">
           <a-input-password v-model:value="formState.password" placeholder="请输入密码" />
         </a-form-item>
         <a-form-item label="昵称">

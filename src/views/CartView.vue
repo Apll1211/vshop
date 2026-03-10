@@ -10,6 +10,7 @@ import {
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
+import { getFileUrl } from "@/api/request";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -141,7 +142,7 @@ const goShopping = () => {
                         class="w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0"
                       >
                         <img
-                          :src="item.imgUrl || '/placeholder.png'"
+                          :src="getFileUrl(item.imgUrl)"
                           :alt="item.skuName"
                           class="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
@@ -243,7 +244,7 @@ const goShopping = () => {
               <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
                   <span class="text-zinc-500">商品金额</span>
-                  <span>¥{{ cartStore.totalPrice.toFixed(2) }}</span>
+                  <span>¥{{ (cartStore.totalPrice / 100).toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-zinc-500">运费</span>
@@ -259,7 +260,7 @@ const goShopping = () => {
                 <div class="flex justify-between items-baseline">
                   <span class="text-zinc-500">应付总额</span>
                   <span class="text-2xl font-bold text-rose-500">
-                    ¥{{ cartStore.totalPrice.toFixed(2) }}
+                    ¥{{ (cartStore.totalPrice / 100).toFixed(2) }}
                   </span>
                 </div>
               </div>

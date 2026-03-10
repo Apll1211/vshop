@@ -5,8 +5,8 @@ import {
 	ShoppingCartOutlined,
 	ShoppingOutlined,
 } from "@ant-design/icons-vue";
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core";
 import { onMounted, ref } from "vue";
-import { useBreakpoints, breakpointsTailwind } from '@vueuse/core';
 import {
 	getAdminOrderList,
 	getAdvList,
@@ -14,11 +14,12 @@ import {
 	getShopList,
 	getSpuList,
 } from "@/api";
+import { getFileUrl } from "@/api/request";
 import { useAdminStore } from "@/stores/admin";
 
 const adminStore = useAdminStore();
 const breakpoints = useBreakpoints(breakpointsTailwind);
-const isMobile = ref(breakpoints.smaller('md'));
+const isMobile = ref(breakpoints.smaller("md"));
 const loading = ref(false);
 
 const stats = ref([
@@ -56,10 +57,6 @@ const stats = ref([
 const fetchData = async () => {
 	loading.value = true;
 	try {
-		// 尝试获取统计数据
-		const statsRes = await getDashboardStats().catch(() => null);
-
-		// 手动从各接口获取数据以保证实时性
 		const [spuRes, orderRes, shopRes, advRes] = await Promise.all([
 			getSpuList({ pageSize: 1 }).catch(() => null),
 			getAdminOrderList({ pageSize: 1 }).catch(() => null),
@@ -67,41 +64,102 @@ const fetchData = async () => {
 			getAdvList({ pageSize: 1 }).catch(() => null),
 		]);
 
-		// 更新统计卡片
-		if (spuRes?.code === 200) stats.value[0].value = String(spuRes.count || 0);
-		if (orderRes?.code === 200)
-			stats.value[1].value = String(orderRes.count || 0);
-		if (shopRes?.code === 200)
-			stats.value[2].value = String(shopRes.shopList?.length || 0);
-		if (advRes?.code === 200) stats.value[3].value = String(advRes.total || 0);
+		if (spuRes) {
+			const d = spuRes as any;
+			stats.value[0].value = String(
+				d.count || d.total || d.data?.count || d.data?.total || 0,
+			);
+		}
+		if (orderRes) {
+			const d = orderRes as any;
+			stats.value[1].value = String(
+				d.count || d.total || d.data?.count || d.data?.total || 0,
+			);
+		}
+		if (shopRes) {
+			const d = shopRes as any;
+			const list =
+				d.shopList || d.data?.shopList || (Array.isArray(d) ? d : []);
+			stats.value[2].value = String(list.length || 0);
+		}
+		if (advRes) {
+			const d = advRes as any;
+			stats.value[3].value = String(
+				d.total || d.count || d.data?.total || d.data?.count || 0,
+			);
+		}
 
-		// 如果接口返回了专用的统计数据且不为0，则尝试更新
-		if (statsRes?.code === 200) {
-			if (statsRes.productCount)
-				stats.value[0].value = String(statsRes.productCount);
-			if (statsRes.orderCount)
-				stats.value[1].value = String(statsRes.orderCount);
-			if (statsRes.shopCount) stats.value[2].value = String(statsRes.shopCount);
-			if (statsRes.advCount) stats.value[3].value = String(statsRes.advCount);
+		try {
+			const statsRes: any = await getDashboardStats();
+			if (statsRes && (statsRes.code === 200 || statsRes.ok === 1)) {
+				if (statsRes.productCount !== undefined)
+					stats.value[0].value = String(statsRes.productCount);
+				if (statsRes.orderCount !== undefined)
+					stats.value[1].value = String(statsRes.orderCount);
+				if (statsRes.shopCount !== undefined)
+					stats.value[2].value = String(statsRes.shopCount);
+				if (statsRes.advCount !== undefined)
+					stats.value[3].value = String(statsRes.advCount);
+			}
+		} catch (e) {
+			// ignore
 		}
 	} catch (error) {
-		console.error("获取仪表盘数据失败:", error);
+		console.log("统计数据加载受限");
 	} finally {
 		loading.value = false;
 	}
 };
 
 onMounted(async () => {
+	// 1. 强制重新拉取管理员信息，确保拿到了最新的 avatar
+	await adminStore.fetchAdminInfo();
+
+	// 2. 加载统计数据
 	await fetchData();
+
+	// 3. 调试输出：确认 Store 中的真实数据
+	console.log("[工作台] 当前用户信息:", adminStore.user);
+	console.log("[工作台] 头像原始路径:", adminStore.user?.avatar);
+	console.log("[工作台] 头像处理路径:", getFileUrl(adminStore.user?.avatar));
 });
 </script>
 
 <template>
   <div class="space-y-4 md:space-y-6 pb-10">
     <!-- 欢迎横幅 -->
-    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-5 md:p-6 text-white shadow-md">
-      <h1 class="text-xl md:text-2xl font-bold">欢迎回来，{{ adminStore.user?.nickName || adminStore.user?.adminName }}！</h1>
-      <p class="mt-2 text-blue-100 text-sm md:text-base opacity-90">这是您的商家后台控制台，您可以在这里高效管理各项业务。</p>
+    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-5 md:p-8 text-white shadow-md flex items-center justify-between overflow-hidden relative">
+      <div class="z-10 flex-1">
+        <h1 class="text-xl md:text-3xl font-bold">欢迎回来，{{ adminStore.user?.nickName || adminStore.user?.adminName }}！</h1>
+        <p class="mt-2 text-blue-100 text-sm md:text-base opacity-90 max-w-2xl">
+          这是您的后台控制台，您可以在这里高效管理各项业务。
+        </p>
+      </div>
+      
+      <!-- 头像区域 (高度加固版) -->
+      <div class="flex-shrink-0 z-10 ml-4 hidden sm:block">
+        <div class="p-1 bg-white/20 rounded-full backdrop-blur-sm border border-white/30 shadow-lg">
+          <div 
+            class="rounded-full overflow-hidden border-2 border-white flex items-center justify-center bg-blue-400"
+            :style="{ width: isMobile ? '64px' : '88px', height: isMobile ? '64px' : '88px' }"
+          >
+            <!-- 方案：直接使用 getFileUrl，并通过 key 强制刷新 -->
+            <img 
+              v-if="adminStore.user?.avatar"
+              :key="adminStore.user.avatar"
+              :src="getFileUrl(adminStore.user.avatar)" 
+              class="w-full h-full object-cover"
+              alt="Avatar"
+            />
+            <span v-else class="text-2xl font-bold uppercase">
+              {{ (adminStore.user?.nickName || adminStore.user?.adminName || 'A').substring(0, 1) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+      <div class="absolute right-20 -top-10 w-24 h-24 bg-indigo-400/20 rounded-full blur-2xl"></div>
     </div>
 
     <!-- 统计卡片 -->

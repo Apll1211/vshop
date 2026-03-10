@@ -43,7 +43,8 @@ onMounted(async () => {
 	// 加载商品数据
 	try {
 		const hotRes = await searchProducts({ keyword: "热销", pageSize: 10 });
-		hotProducts.value = hotRes.data?.data || [];
+		// 兼容不同响应结构
+		hotProducts.value = (hotRes.data && (hotRes.data as any).data) || hotRes.data || [];
 	} catch (e) {
 		console.log("加载热门商品失败");
 	}

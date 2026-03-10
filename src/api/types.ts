@@ -1,5 +1,5 @@
 // 通用响应类型
-export interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = any> {
 	code: number;
 	message: string;
 	data?: T;
@@ -9,17 +9,13 @@ export interface ApiResponse<T = unknown> {
 // 分类相关类型
 export interface Category {
 	_id: string;
-	id?: string;
+	id: string; // 后端可能返回 id 或 _id，统一映射
 	name: string;
 	parentId?: string | null;
 	level?: number;
 	showFlag: number;
 	sort: number;
 	children?: Category[];
-	createTime?: string;
-	updateTime?: string;
-	catLevel?: number;
-	ids?: string[];
 }
 
 export interface CategoryListResponse {
@@ -31,13 +27,11 @@ export interface CategoryListResponse {
 // 品牌相关类型
 export interface Trademark {
 	_id: string;
-	id?: string;
+	id: string;
 	name: string;
 	logo: string;
 	sort: number;
 	showFlag: number;
-	createTime?: string;
-	updateTime?: string;
 }
 
 export interface TrademarkListResponse {
@@ -55,22 +49,23 @@ export interface TrademarkListResponse {
 export interface SpuSaleAttrValue {
 	_id?: string;
 	id?: string;
-	name: string;
+	saleAttrValueName: string; // 修正字段名
+	name?: string;
 	isSelected?: boolean;
 }
 
 export interface SpuSaleAttr {
 	_id: string;
 	id?: string;
-	name: string;
-	valueList?: { _id: string; name: string }[];
-	valueArr?: string[];
+	saleAttrName: string; // 修正字段名
+	name?: string;
+	spuSaleAttrValueList: SpuSaleAttrValue[]; // 修正字段名
 	isSelected?: boolean;
 }
 
 export interface Spu {
 	_id: string;
-	id?: string;
+	id: string;
 	name: string;
 	description?: string;
 	trademarkId?: string;
@@ -79,72 +74,76 @@ export interface Spu {
 	category2Id?: string;
 	categoryId?: string;
 	images: string[];
-	imgs?: string[];
 	spuSaleAttrList?: SpuSaleAttr[];
 	showFlag: number;
 	sort: number;
-	createTime?: string;
-	updateTime?: string;
 }
 
 // SKU 相关类型
 export interface SkuImage {
+	_id?: string;
 	id?: string;
 	imgName?: string;
 	imgUrl: string;
-	skuId?: string;
-	spuImgId?: string;
 	isDefault?: number;
 }
 
 export interface SkuSaleAttrValue {
+	_id?: string;
 	id?: string;
-	attrId?: string;
-	saleAttrId?: string;
-	saleAttrName?: string;
-	valueId?: string;
-	saleAttrValueId?: string;
-	valueName?: string;
-	saleAttrValueName?: string;
-	skuId?: string;
-	spuId?: string;
+	saleAttrId: string;
+	saleAttrName: string;
+	saleAttrValueId: string;
+	saleAttrValueName: string;
 }
 
 export interface Sku {
 	_id: string;
-	id?: string;
+	id: string;
 	spuId: string;
 	shopId?: string;
 	name: string;
 	fullName?: string;
 	price: number;
-	defaultImg?: string;
 	skuDefaultImg?: string;
-	stock?: number;
+	defaultImg?: string;
+	stock: number;
 	isSale: number;
-	category1Id?: string;
-	category2Id?: string;
-	categoryId?: string;
 	skuImageList?: SkuImage[];
-	skuSaleAttrValueList?: SkuSaleAttrValue[];
-	skuAttrValueList?: any[];
-	createTime?: string;
-	updateTime?: string;
+	skuSaleAttrValueList?: Record<string, string> | SkuSaleAttrValue[]; // 支持对象或数组
+	skuAttrValueList?: Record<string, string> | any[];
+}
+
+// 统一的商品简要信息类型，用于列表展示
+export interface ProductInfo {
+	_id: string;
+	id: string;
+	name: string;
+	title?: string; // 兼容写法
+	fullName?: string;
+	price: number;
+	originalPrice?: number;
+	defaultImg?: string;
+	hotScore?: number;
+	stock?: number;
 }
 
 export interface ProductDetail {
 	skuInfo: Sku;
 	spuSaleAttrList: SpuSaleAttr[];
-	price?: string | number;
+	price?: number;
 }
 
 // 用户相关类型
-export interface UserRegisterParams {
+export interface UserInfo {
+	_id: string;
+	id: string;
 	phone: string;
-	password?: string;
-	username?: string;
+	username: string;
 	nickname?: string;
-	code?: string;
+	avatar?: string;
+	email?: string;
+	token?: string;
 }
 
 export interface UserLoginParams {
@@ -153,67 +152,47 @@ export interface UserLoginParams {
 	code?: string;
 }
 
-export interface UserInfo {
-	_id?: string;
-	id: string;
+export interface UserRegisterParams {
 	phone: string;
-	username: string;
+	password?: string;
+	username?: string;
 	nickname?: string;
-	nickName?: string;
-	avatar?: string;
-	email?: string;
-	token?: string;
-	status?: number;
-	createTime?: string;
+	code?: string;
 }
 
 export interface UserAddress {
-	_id?: string;
+	_id: string;
 	id: string;
 	consignee: string;
-	phone?: string;
-	phoneNum?: string;
-	area?: string[];
-	specific?: string;
-	provinceCode?: string;
+	phone: string;
 	provinceName?: string;
-	cityCode?: string;
 	cityName?: string;
-	districtCode?: string;
 	districtName?: string;
-	detailAddress?: string;
+	detailAddress: string;
 	isDefault: number;
-	addressType?: number;
 	userId: string;
 }
 
 // 购物车相关类型
 export interface CartItem {
-	_id?: string;
+	_id: string;
 	id: string;
 	skuId: string;
 	skuName: string;
-	skuPrice: string | number;
+	skuPrice: number;
 	skuNum: number;
 	imgUrl: string;
 	isChecked: number;
 	userId: string;
-	skuInfo?: Sku;
-}
-
-export interface CartListResponse {
-	code: number;
-	message: string;
-	data: CartItem[];
 }
 
 // 订单相关类型
 export interface OrderItem {
-	_id?: string;
+	_id: string;
 	id: string;
 	skuId: string;
 	skuName: string;
-	skuPrice: string | number;
+	skuPrice: number;
 	skuNum: number;
 	imgUrl: string;
 	orderId: string;
@@ -221,75 +200,33 @@ export interface OrderItem {
 
 export interface Order {
 	_id: string;
-	id?: string;
+	id: string;
 	orderNo: string;
-	tradeNo?: string;
 	userId: string;
-	userName?: string;
-	totalAmount: number | string;
+	totalAmount: number;
 	orderStatus: string;
-	paymentWay?: string;
-	paymentMethod?: number;
 	deliveryAddress: string;
 	consignee: string;
 	consigneeTel: string;
-	orderComment?: string;
 	createTime: string;
-	updateTime: string;
 	orderDetailList?: OrderItem[];
-}
-
-export interface OrderListResponse {
-	code: number;
-	message: string;
-	orderList?: Order[];
-	data?: {
-		records: Order[];
-		total: number;
-		size: number;
-		current: number;
-		pages: number;
-	};
-	pageNo?: number;
-	pageSum?: number;
-	pageSize?: number;
-	count?: number;
-}
-
-export interface SubmitOrderParams {
-	tradeNo?: string;
-	consignee: string;
-	consigneeTel: string;
-	deliveryAddress: string;
-	paymentWay: string;
-	orderComment?: string;
-	addressId?: string;
-	skuInfoList?: {
-		skuId: string;
-		skuNum: number;
-	}[];
-	paymentMethod?: number;
 }
 
 // 管理员相关类型
 export interface AdminUser {
 	_id: string;
-	id?: string;
+	id: string;
 	adminName: string;
 	nickName?: string;
 	avatar?: string;
 	role: "admin" | "merchant";
-	isMerchant?: number;
 	createTime: string;
-	updateTime: string;
 }
 
 export interface AdminLog {
 	_id: string;
-	id?: string;
-	adminId: string;
+	id: string;
 	adminName: string;
-	operation?: string;
 	describe: string;
 	ip?: string;
 	created_at: string;
@@ -300,43 +237,19 @@ export interface AdminLog {
 // 店铺相关类型
 export interface Shop {
 	_id: string;
-	id?: string;
+	id: string;
 	name: string;
 	logo?: string;
 	description?: string;
-	adminId?: string;
 	status: number;
-	createTime: string;
-	updateTime: string;
 }
 
 // 广告相关类型
 export interface Advertisement {
 	_id: string;
-	id?: string;
-	name?: string;
-	title?: string;
-	imgUrl: string;
-	linkUrl?: string;
-	advType?: number;
-	position?: string;
-	sort: number;
-	status: number;
-	createTime: string;
-	updateTime: string;
-}
-
-export interface Banner {
 	id: string;
 	title: string;
 	imgUrl: string;
 	linkUrl?: string;
-}
-
-export interface FloorContent {
-	id: string;
-	name: string;
-	tabs?: string[];
-	keywords?: string[];
-	products?: any[];
+	status: number;
 }

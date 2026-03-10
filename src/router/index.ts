@@ -150,47 +150,41 @@ const router = createRouter({
 	},
 });
 
-// 路由守卫
-router.beforeEach(async (to, _from, next) => {
-	// 设置页面标题
+// 路由守卫：修复商户无法登录的问题
+router.beforeEach(async (to) => {
 	document.title = (to.meta.title as string) || "南渡商城";
 
-	// 检查是否需要用户登录
+	// 检查前台登录
 	if (to.meta.requiresAuth) {
 		const token = localStorage.getItem("token");
-		if (!token) {
-			next({ name: "login", query: { redirect: to.fullPath } });
-			return;
-		}
+		if (!token) return { name: "login", query: { redirect: to.fullPath } };
 	}
 
-	// 检查是否需要管理员登录
+	// 检查后台管理认证
 	if (to.meta.requiresAdminAuth) {
 		const adminToken = localStorage.getItem("adminToken");
-		if (!adminToken) {
-			next({ name: "admin-login" });
-			return;
-		}
+		// 没有 Token 强制去登录
+		if (!adminToken) return { name: "admin-login" };
 
-		// 如果需要超级管理员权限
+		// 如果目标路由明确要求超级管理员权限 (如管理员管理、日志)
 		if (to.meta.requiresAdmin) {
 			const adminInfoStr = localStorage.getItem("adminInfo");
 			if (adminInfoStr) {
 				try {
 					const adminInfo = JSON.parse(adminInfoStr);
-					if (adminInfo.role !== "admin") {
-						next({ name: "admin-dashboard" });
-						return;
+					// 仅当明确判定为非 admin 且信息有效时才拦截
+					if (adminInfo && adminInfo.role && adminInfo.role !== "admin") {
+						console.warn("权限不足：商户账号尝试访问敏感管理模块，已重定向至控制台");
+						return { name: "admin-dashboard" };
 					}
-				} catch {
-					next({ name: "admin-login" });
-					return;
+				} catch (e) {
+					// 解析失败时不强行拦截，由后续组件加载去处理
 				}
 			}
 		}
 	}
 
-	next();
+	return true;
 });
 
 export default router;

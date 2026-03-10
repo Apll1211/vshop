@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LockOutlined, UserOutlined } from "@ant-design/icons-vue";
+import { LockOutlined, UserOutlined, ShopOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -8,35 +8,45 @@ import { useAdminStore } from "@/stores/admin";
 const router = useRouter();
 const adminStore = useAdminStore();
 
+const loginType = ref<"admin" | "merchant">("admin");
+
 const formState = ref({
-	adminName: "",
+	account: "",
 	password: "",
 });
 
 const loading = ref(false);
 
 const handleSubmit = async () => {
-	console.log("表单提交:", formState.value);
-
-	if (!formState.value.adminName || !formState.value.password) {
-		message.warning("请输入用户名和密码");
+	if (!formState.value.account || !formState.value.password) {
+		message.warning("请输入用户名/手机号和密码");
 		return;
 	}
 
 	loading.value = true;
 	try {
-		console.log("开始登录...");
-		const result = await adminStore.login(formState.value);
-		console.log("登录结果:", result);
+		let result;
+		if (loginType.value === "admin") {
+			result = await adminStore.login({
+				adminName: formState.value.account,
+				password: formState.value.password,
+			});
+		} else {
+			result = await adminStore.login({
+				adminName: formState.value.account,
+				password: formState.value.password,
+			});
+		}
+
 		if (result.success) {
 			message.success("登录成功");
 			router.push("/admin");
 		} else {
 			message.error(result.message || "登录失败");
 		}
-	} catch (error) {
+	} catch (error: any) {
 		console.error("登录错误:", error);
-		message.error("登录失败，请稍后重试");
+		message.error(error.message || "登录失败，请稍后重试");
 	} finally {
 		loading.value = false;
 	}
@@ -44,21 +54,39 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-    <div class="absolute inset-0 overflow-hidden">
-      <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
+  <div class="login-container min-h-screen flex items-center justify-center relative overflow-hidden">
+    <!-- 呼吸背景装饰 -->
+    <div class="breathing-bg absolute inset-0">
+      <div class="circle circle-1"></div>
+      <div class="circle circle-2"></div>
     </div>
 
     <div class="relative z-10 w-full max-w-md px-6">
-      <div class="bg-slate-800/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-8">
+      <div class="login-card bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 animate-float">
         <!-- Logo -->
         <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-4">
-            <span class="text-3xl font-bold text-white">Z</span>
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
+            <ShopOutlined class="text-3xl text-blue-600" />
           </div>
-          <h1 class="text-2xl font-bold text-white">南渡商城商家后台</h1>
-          <p class="text-slate-400 mt-2">请登录您的管理员账号</p>
+          <h1 class="text-2xl font-bold text-white mb-6">南渡后台管理系统</h1>
+          
+          <!-- 登录类型切换 (全白色文字设计) -->
+          <div class="flex justify-center p-1 bg-white/10 rounded-lg border border-white/10">
+            <button 
+              class="flex-1 py-2 text-sm font-medium rounded-md transition-all"
+              :class="loginType === 'admin' ? 'bg-white/20 text-white shadow-sm' : 'text-white/60 hover:text-white'"
+              @click="loginType = 'admin'"
+            >
+              管理员登录
+            </button>
+            <button 
+              class="flex-1 py-2 text-sm font-medium rounded-md transition-all"
+              :class="loginType === 'merchant' ? 'bg-white/20 text-white shadow-sm' : 'text-white/60 hover:text-white'"
+              @click="loginType = 'merchant'"
+            >
+              商户登录
+            </button>
+          </div>
         </div>
 
         <!-- Login Form -->
@@ -67,20 +95,16 @@ const handleSubmit = async () => {
           @finish="handleSubmit"
           layout="vertical"
           class="space-y-6"
-          :validate-messages="{
-            required: '${label}不能为空',
-          }"
         >
           <a-form-item
-            label="用户名"
-            name="adminName"
-            :rules="[{ required: true, message: '请输入用户名' }]"
+            :label="loginType === 'admin' ? '管理员账号' : '商户账号/手机号'"
+            name="account"
             class="mb-4 white-label"
           >
             <a-input
-              v-model:value="formState.adminName"
+              v-model:value="formState.account"
               size="large"
-              placeholder="请输入用户名"
+              :placeholder="loginType === 'admin' ? '请输入管理员账号' : '请输入手机号/商户名'"
               class="custom-input"
             >
               <template #prefix>
@@ -90,9 +114,8 @@ const handleSubmit = async () => {
           </a-form-item>
 
           <a-form-item
-            label="密码"
+            label="登录密码"
             name="password"
-            :rules="[{ required: true, message: '请输入密码' }]"
             class="mb-6 white-label"
           >
             <a-input-password
@@ -114,41 +137,86 @@ const handleSubmit = async () => {
               size="large"
               block
               :loading="loading"
-              class="h-12 bg-gradient-to-r from-blue-500 to-indigo-600 border-0 hover:from-blue-600 hover:to-indigo-700"
+              class="h-12 bg-white text-blue-600 border-0 font-bold hover:bg-white/90 shadow-xl"
             >
-              登录
+              进入系统
             </a-button>
           </a-form-item>
         </a-form>
 
-        <!-- Footer -->
-        <div class="mt-8 text-center">
-          <router-link to="/" class="text-slate-400 hover:text-blue-400 transition-colors text-sm">
-            返回商城首页
+        <div class="mt-8 text-center border-t border-white/10 pt-6">
+          <router-link to="/" class="text-white/60 hover:text-white transition-colors text-sm">
+            ← 返回商城首页
           </router-link>
         </div>
       </div>
 
-      <p class="text-center text-slate-500 text-sm mt-6">
-        © 2026 南渡商城 版权所有
+      <p class="text-center text-white/40 text-sm mt-8">
+        © 2026 南渡商城 技术支持
       </p>
     </div>
   </div>
 </template>
 
 <style scoped>
+.login-container {
+  background-color: #0f172a;
+}
+
+/* 呼吸背景动画 */
+.breathing-bg {
+  filter: blur(80px);
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  animation: breathe 8s infinite alternate ease-in-out;
+}
+
+.circle-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+  top: -100px;
+  right: -100px;
+}
+
+.circle-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+  bottom: -150px;
+  left: -150px;
+  animation-delay: -4s;
+}
+
+@keyframes breathe {
+  0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+  100% { transform: scale(1.3) translate(20px, 30px); opacity: 0.8; }
+}
+
+/* 卡片浮动动画 */
+.animate-float {
+  animation: float 6s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
 .white-label :deep(.ant-form-item-label > label) {
-  color: #ffffff !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500;
 }
 
-.white-label :deep(.ant-form-item-label > label::before) {
-  display: none !important;
-}
-
+/* 输入框背景改为纯白色 */
 .custom-input :deep(.ant-input),
-.custom-input :deep(.ant-input-password) {
-  background-color: #fff !important;
-  border-color: #e2e8f0 !important;
+.custom-input :deep(.ant-input-password),
+.custom-input.ant-input-affix-wrapper {
+  background-color: #ffffff !important;
+  border-color: transparent !important;
   color: #1e293b !important;
 }
 
@@ -156,19 +224,9 @@ const handleSubmit = async () => {
   color: #94a3b8 !important;
 }
 
-.custom-input :deep(.ant-input-affix-wrapper) {
-  background-color: #fff !important;
-  border-color: #e2e8f0 !important;
-}
-
-.custom-input :deep(.ant-input-affix-wrapper:hover),
-.custom-input :deep(.ant-input:hover),
-.custom-input :deep(.ant-input:focus) {
+.custom-input.ant-input-affix-wrapper:hover,
+.custom-input.ant-input-affix-wrapper-focused {
   border-color: #3b82f6 !important;
-}
-
-.custom-input :deep(.ant-input-affix-wrapper-focused) {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
 }
 </style>

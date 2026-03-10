@@ -22,7 +22,9 @@ export const getTrademarkList = (params?: {
 	pageNo?: number;
 	pageSize?: number;
 }) => {
-	return request.get<TrademarkListResponse>("/product/trademark", { params });
+	return request.get<any, TrademarkListResponse>("/product/trademark", {
+		params,
+	});
 };
 
 // 获取品牌列表别名（后台）
