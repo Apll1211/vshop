@@ -2,7 +2,6 @@
 import {
 	ChevronDown,
 	LogOut,
-	Menu,
 	Package,
 	Search,
 	Settings,
@@ -22,7 +21,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useCartStore, useCategoryStore, useUserStore } from "@/stores";
 import TheCategoryNav from "./TheCategoryNav.vue";
 
@@ -33,7 +31,6 @@ const cartStore = useCartStore();
 const categoryStore = useCategoryStore();
 
 const searchKeyword = ref("");
-const isMobileMenuOpen = ref(false);
 
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const userInfo = computed(() => userStore.userInfo);
@@ -141,52 +138,16 @@ onMounted(() => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button v-else variant="default" @click="goToLogin" class="hidden md:inline-flex bg-blue-600 hover:bg-blue-700 h-10 lg:h-12">
-            <User class="w-4 h-4 mr-2" />
-            登录
+          <Button 
+            v-else 
+            variant="ghost" 
+            size="icon"
+            @click="goToLogin" 
+            class="h-10 w-10 lg:h-12 lg:w-12 rounded-full hover:bg-blue-50 hover:text-blue-600"
+            title="登录"
+          >
+            <User class="w-5 h-5 lg:w-6 lg:h-6" />
           </Button>
-
-          <!-- 移动端菜单 -->
-          <Sheet v-model:open="isMobileMenuOpen">
-            <SheetTrigger as-child class="lg:hidden">
-              <Button variant="ghost" size="icon" class="h-10 w-10 hover:bg-blue-50 hover:text-blue-600">
-                <Menu class="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" class="w-80">
-              <div class="py-4">
-                <template v-if="isLoggedIn">
-                  <div class="flex items-center gap-3 mb-6 pb-4 border-b">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User class="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p class="font-medium text-slate-900">{{ userInfo?.username || '用户' }}</p>
-                      <p class="text-sm text-slate-500">{{ userInfo?.phone }}</p>
-                    </div>
-                  </div>
-                  <nav class="space-y-2">
-                    <Button variant="ghost" class="w-full justify-start hover:bg-blue-50 hover:text-blue-600" @click="goToOrders">
-                      <Package class="w-4 h-4 mr-3 text-blue-500" />
-                      我的订单
-                    </Button>
-                    <Button variant="ghost" class="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600" @click="handleLogout">
-                      <LogOut class="w-4 h-4 mr-3" />
-                      退出登录
-                    </Button>
-                  </nav>
-                </template>
-                <template v-else>
-                  <div class="pt-4">
-                    <Button class="w-full bg-blue-600 hover:bg-blue-700" @click="goToLogin">
-                      <User class="w-4 h-4 mr-2" />
-                      登录
-                    </Button>
-                  </div>
-                </template>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
       </div>
     </div>

@@ -82,7 +82,7 @@ const goShopping = () => {
   <div class="min-h-screen bg-zinc-50">
     <div class="container mx-auto px-4 py-8">
       <div class="flex items-center gap-3 mb-6">
-        <ShoppingCart class="w-6 h-6 text-emerald-600" />
+        <ShoppingCart class="w-6 h-6 text-blue-600" />
         <h1 class="text-2xl font-bold text-zinc-800">我的购物车</h1>
         <Badge variant="secondary" class="ml-2">{{ cartStore.cartCount }} 件商品</Badge>
       </div>
@@ -92,7 +92,7 @@ const goShopping = () => {
         <CardContent>
           <ShoppingBag class="w-24 h-24 mx-auto text-zinc-200 mb-6" />
           <p class="text-zinc-500 mb-6">购物车还是空的，快去选购商品吧~</p>
-          <Button @click="goShopping" class="bg-emerald-600 hover:bg-emerald-700">
+          <Button @click="goShopping" class="bg-blue-600 hover:bg-blue-700">
             去购物
             <ArrowRight class="w-4 h-4 ml-2" />
           </Button>
@@ -143,7 +143,7 @@ const goShopping = () => {
                       <div class="flex-1 min-w-0">
                         <router-link
                           :to="{ name: 'product-detail', params: { id: item.skuId } }"
-                          class="font-medium text-zinc-800 hover:text-emerald-600 line-clamp-2"
+                          class="font-medium text-zinc-800 hover:text-blue-600 line-clamp-2"
                         >
                           {{ item.skuName }}
                         </router-link>
@@ -155,7 +155,7 @@ const goShopping = () => {
                     </div>
                   </TableCell>
                   <TableCell class="text-center">
-                    <span class="text-rose-500 font-medium">¥{{ formatPrice(item.skuPrice) }}</span>
+                    <span class="text-blue-600 font-medium">¥{{ formatPrice(item.skuPrice) }}</span>
                   </TableCell>
                   <TableCell>
                     <div class="flex items-center justify-center gap-1">
@@ -181,7 +181,7 @@ const goShopping = () => {
                     </div>
                   </TableCell>
                   <TableCell class="text-center">
-                    <span class="text-rose-500 font-bold">
+                    <span class="text-blue-600 font-bold">
                       ¥{{ formatPrice(parseFloat(item.skuPrice.toString()) * item.skuNum) }}
                     </span>
                   </TableCell>
@@ -189,7 +189,7 @@ const goShopping = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      class="text-zinc-400 hover:text-rose-500"
+                      class="text-zinc-400 hover:text-blue-600"
                       @click="handleDelete(item.id)"
                     >
                       <Trash2 class="w-4 h-4" />
@@ -222,7 +222,7 @@ const goShopping = () => {
                 </Button>
               </div>
               <div class="text-sm text-zinc-500">
-                已选择 <span class="text-emerald-600 font-medium">{{ cartStore.checkedCount }}</span> 件商品
+                已选择 <span class="text-blue-600 font-medium">{{ cartStore.checkedCount }}</span> 件商品
               </div>
             </CardContent>
           </Card>
@@ -241,25 +241,25 @@ const goShopping = () => {
                 </div>
                 <div class="flex justify-between">
                   <span class="text-zinc-500">运费</span>
-                  <span class="text-emerald-600">免运费</span>
+                  <span class="text-blue-600">免运费</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-zinc-500">优惠</span>
-                  <span class="text-rose-500">-¥0.00</span>
+                  <span class="text-blue-600">-¥0.00</span>
                 </div>
               </div>
 
               <div class="border-t pt-4">
                 <div class="flex justify-between items-baseline">
                   <span class="text-zinc-500">应付总额</span>
-                  <span class="text-2xl font-bold text-rose-500">
+                  <span class="text-2xl font-bold text-blue-600">
                     ¥{{ (cartStore.totalPrice / 100).toFixed(2) }}
                   </span>
                 </div>
               </div>
 
               <Button
-                class="w-full bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
+                class="w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 size="lg"
                 @click="goCheckout"
                 :disabled="cartStore.checkedCount === 0"
@@ -280,4 +280,5 @@ const goShopping = () => {
       </div>
     </div>
   </div>
+
 </template>

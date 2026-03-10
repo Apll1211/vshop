@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
 		path: "/cart",
 		name: "cart",
 		component: () => import("@/views/CartView.vue"),
-		meta: { title: "购物车 - 南渡商城" },
+		meta: { title: "购物车 - 南渡商城", requiresAuth: true },
 	},
 	{
 		path: "/login",

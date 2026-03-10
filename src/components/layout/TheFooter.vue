@@ -12,13 +12,16 @@ const currentYear = new Date().getFullYear();
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
         <!-- 公司信息 -->
         <div class="space-y-4">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span class="text-white font-bold text-xl">Z</span>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-black rounded-xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                <path d="M8 8h16v4.5L15.5 19 14 17.5 20 12.5H8V8z" fill="#FFFFFF" />
+                <path d="M24 24H8v-4.5L16.5 13 18 14.5 12 19.5h12V24z" fill="#FFFFFF" />
+              </svg>
             </div>
-            <div>
-              <h3 class="text-xl font-bold">南渡商城</h3>
-              <p class="text-sm text-blue-300">品质生活，从这里开始</p>
+            <div class="flex flex-col">
+              <h3 class="text-xl font-bold leading-tight">南渡商城</h3>
+              <p class="text-sm text-blue-300 leading-normal">品质生活，从这里开始</p>
             </div>
           </div>
           <p class="text-slate-400 text-sm leading-relaxed">

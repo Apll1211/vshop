@@ -93,11 +93,17 @@ onMounted(() => {
       :width="220"
       theme="dark"
       class="admin-side-bar"
+      :class="{ 'mobile-sider': isMobile, 'mobile-sider-open': isMobile && !collapsed }"
     >
       <div class="sider-flex-container">
         <!-- 1. Logo 区域 -->
         <div class="logo-container">
-          <img src="@/assets/logo-m.svg" class="logo-img" />
+          <div class="logo-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+              <path d="M8 8h16v4.5L15.5 19 14 17.5 20 12.5H8V8z" fill="#FFFFFF" />
+              <path d="M24 24H8v-4.5L16.5 13 18 14.5 12 19.5h12V24z" fill="#FFFFFF" />
+            </svg>
+          </div>
           <span v-if="!collapsed" class="logo-text">南渡后台</span>
         </div>
         
@@ -161,7 +167,17 @@ onMounted(() => {
       </div>
     </a-layout-sider>
 
-    <a-layout class="admin-content-layout">
+    <a-layout 
+      class="admin-content-layout"
+      :class="{ 'mobile-content-pushed': isMobile && !collapsed }"
+    >
+      <!-- 移动端遮罩层 -->
+      <div 
+        v-if="isMobile && !collapsed" 
+        class="mobile-mask" 
+        @click="collapsed = true"
+      ></div>
+
       <!-- 顶部 Header -->
       <a-layout-header class="admin-header">
         <div class="header-left">
@@ -221,10 +237,12 @@ onMounted(() => {
 
 <style scoped>
 .admin-main-layout {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .admin-side-bar {
+  height: 100vh;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   z-index: 100;
   background: #001529;
@@ -234,7 +252,7 @@ onMounted(() => {
 .sider-flex-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
 }
 
 .logo-container {
@@ -312,10 +330,15 @@ onMounted(() => {
 }
 
 .admin-content-layout {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: #f0f2f5;
 }
 
 .admin-header {
+  flex-shrink: 0;
   background: white;
   padding: 0 24px;
   display: flex;
@@ -400,8 +423,9 @@ onMounted(() => {
 }
 
 .admin-page-content {
+  flex: 1;
+  overflow-y: auto;
   padding: 24px;
-  min-height: 280px;
 }
 
 .content-wrapper {
@@ -409,6 +433,46 @@ onMounted(() => {
   padding: 24px;
   border-radius: 8px;
   min-height: 100%;
+}
+
+/* 移动端特定样式 */
+.mobile-sider {
+  position: absolute !important;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000 !important;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease !important;
+}
+
+.mobile-sider-open {
+  transform: translateX(0);
+}
+
+.admin-content-layout {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+  transition: transform 0.3s ease;
+  width: 100%;
+}
+
+.mobile-content-pushed {
+  transform: translateX(220px);
+}
+
+.mobile-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 900;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {

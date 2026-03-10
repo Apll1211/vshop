@@ -297,13 +297,13 @@ onMounted(async () => {
           :variants="containerVariants"
         >
           <motion.div :variants="itemVariants" class="flex items-center justify-between mb-8">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-linear-to-br from-orange-400 to-orange-500 flex items-center justify-center">
-                <TrendingUp class="w-5 h-5 text-white" />
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-linear-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
+                <TrendingUp class="w-5 h-5 lg:w-6 lg:h-6 text-white" />
               </div>
-              <div>
-                <h2 class="text-2xl lg:text-3xl font-bold text-slate-900">热门推荐</h2>
-                <p class="text-sm text-slate-500">精选热销好物</p>
+              <div class="flex flex-col">
+                <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">热门推荐</h2>
+                <p class="text-sm text-slate-500 leading-normal">精选热销好物</p>
               </div>
             </div>
             <Button variant="ghost" class="text-blue-600 hover:text-blue-700 hover:bg-blue-50" @click="router.push({ path: '/search', query: { keyword: '热销' } })">

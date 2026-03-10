@@ -68,23 +68,33 @@ defineExpose({
       <div class="login-card bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 animate-float">
         <!-- Logo -->
         <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
-            <ShopOutlined class="text-3xl text-blue-600" />
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4 overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 32 32">
+              <rect width="32" height="32" rx="9" fill="#000000" />
+              <path d="M8 8h16v4.5L15.5 19 14 17.5 20 12.5H8V8z" fill="#FFFFFF" />
+              <path d="M24 24H8v-4.5L16.5 13 18 14.5 12 19.5h12V24z" fill="#FFFFFF" />
+            </svg>
           </div>
           <h1 class="text-2xl font-bold text-white mb-6">南渡后台管理系统</h1>
           
           <!-- 登录类型切换 (全白色文字设计) -->
-          <div class="flex justify-center p-1 bg-white/10 rounded-lg border border-white/10">
+          <div class="login-type-switch flex justify-center p-1 bg-white/10 rounded-lg border border-white/10 relative">
+            <!-- 滑动背景 -->
+            <div 
+              class="slider-bg absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white/20 rounded-md transition-all duration-300 ease-in-out"
+              :style="{ left: loginType === 'admin' ? '4px' : 'calc(50%)' }"
+            ></div>
+            
             <button 
-              class="flex-1 py-2 text-sm font-medium rounded-md transition-all"
-              :class="loginType === 'admin' ? 'bg-white/20 text-white shadow-sm' : 'text-white/60 hover:text-white'"
+              class="flex-1 py-2 text-sm font-medium rounded-md transition-all relative z-10"
+              :class="loginType === 'admin' ? 'text-white' : 'text-white/60 hover:text-white'"
               @click="loginType = 'admin'"
             >
               管理员登录
             </button>
             <button 
-              class="flex-1 py-2 text-sm font-medium rounded-md transition-all"
-              :class="loginType === 'merchant' ? 'bg-white/20 text-white shadow-sm' : 'text-white/60 hover:text-white'"
+              class="flex-1 py-2 text-sm font-medium rounded-md transition-all relative z-10"
+              :class="loginType === 'merchant' ? 'text-white' : 'text-white/60 hover:text-white'"
               @click="loginType = 'merchant'"
             >
               商户登录
@@ -231,5 +241,25 @@ defineExpose({
 .custom-input.ant-input-affix-wrapper-focused {
   border-color: #3b82f6 !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 强制切换按钮文字为白色 */
+.login-type-switch button {
+  color: white !important;
+  outline: none;
+  border: none;
+  background: transparent;
+}
+
+.login-type-switch button:not(.text-white) {
+  opacity: 0.6;
+}
+
+.login-type-switch button:hover {
+  opacity: 1;
+}
+
+.slider-bg {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
