@@ -124,14 +124,13 @@ onMounted(async () => {
             :style="{ width: isMobile ? '64px' : '88px', height: isMobile ? '64px' : '88px' }"
           >
             <!-- 方案：直接使用 getFileUrl，并通过 key 强制刷新 -->
-            <img 
+            <img
               v-if="adminStore.user?.avatar"
               :key="adminStore.user.avatar"
-              :src="getFileUrl(adminStore.user.avatar)" 
+              :src="getFileUrl(adminStore.user.avatar, adminStore.user?._id || adminStore.user?.id)"
               class="w-full h-full object-cover"
               alt="Avatar"
-            />
-            <span v-else class="text-2xl font-bold uppercase">
+            />            <span v-else class="text-2xl font-bold uppercase">
               {{ (adminStore.user?.nickName || adminStore.user?.adminName || 'A').substring(0, 1) }}
             </span>
           </div>

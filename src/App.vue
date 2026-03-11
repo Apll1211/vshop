@@ -35,7 +35,8 @@ const isAdminPage = computed(() => {
       <TheFooter />
     </template>
 
-    <Toaster v-if="!isAdminPage" position="top-center" />
+    <!-- 统一全局提示配置，确保在顶部居中且层级最高 -->
+    <Toaster position="top-center" :richColors="true" :expand="true" />
   </div>
 </template>
 
@@ -59,5 +60,10 @@ html, body {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* 确保 Toaster 在所有全屏覆盖层之上 */
+[data-sonner-toaster] {
+  z-index: 9999 !important;
 }
 </style>

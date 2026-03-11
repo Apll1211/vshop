@@ -121,7 +121,8 @@ export function getAdminUserList(params?: {
 	pageSize?: number;
 }) {
 	return request.get<{
-		ok: number;
+		ok?: number;
+		code?: number;
 		message: string;
 		userList: UserInfo[];
 		pageNo: number;

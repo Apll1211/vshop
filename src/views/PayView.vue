@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import { getOrderDetail, payOrder } from "@/api";
+import { getFileUrl } from "@/api/request";
 import type { Order } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,7 +139,7 @@ onMounted(() => {
                   class="flex gap-4 py-3 border-b last:border-b-0"
                 >
                   <img
-                    :src="item.imgUrl || '/placeholder.png'"
+                    :src="getFileUrl(item.imgUrl)"
                     :alt="item.skuName"
                     class="w-16 h-16 rounded-lg object-cover"
                   />

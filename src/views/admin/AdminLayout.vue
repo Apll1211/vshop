@@ -69,6 +69,14 @@ const handleLogout = () => {
 	});
 };
 
+const copyMyToken = () => {
+	const token = adminStore.token;
+	if (token) {
+		navigator.clipboard.writeText(token);
+		message.success("Token 已复制到剪贴板");
+	}
+};
+
 defineExpose({
 	handleMenuClick,
 	goHome,
@@ -140,6 +148,11 @@ onMounted(() => {
               <span>店铺管理</span>
             </a-menu-item>
             
+            <a-menu-item key="admin-user-list" v-if="adminStore.isAdmin">
+              <template #icon><UserOutlined /></template>
+              <span>前台用户管理</span>
+            </a-menu-item>
+            
             <a-menu-item key="admin-advertisement">
               <template #icon><PictureOutlined /></template>
               <span>广告管理</span>
@@ -152,7 +165,7 @@ onMounted(() => {
             
             <a-menu-item key="admin-user">
               <template #icon><UserOutlined /></template>
-              <span>管理员管理</span>
+              <span>后台用户管理</span>
             </a-menu-item>
           </a-menu>
         </div>
@@ -204,13 +217,18 @@ onMounted(() => {
 
           <a-dropdown>
             <div class="admin-user-info">
-              <a-avatar :size="28" :src="getFileUrl(adminStore.user?.avatar)">
+              <a-avatar :size="28" :src="getFileUrl(adminStore.user?.avatar, adminStore.user?._id || adminStore.user?.id)">
                 <template #icon><UserOutlined /></template>
               </a-avatar>
               <span class="user-name">{{ adminStore.user?.nickName || adminStore.user?.adminName }}</span>
             </div>
             <template #overlay>
               <a-menu>
+                <a-menu-item key="copy-token" @click="copyMyToken">
+                  <template #icon><FileTextOutlined /></template>
+                  复制我的 Token
+                </a-menu-item>
+                <a-menu-divider />
                 <a-menu-item key="logout" @click="handleLogout" danger>
                   <template #icon><LogoutOutlined /></template>
                   退出登录

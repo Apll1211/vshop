@@ -117,6 +117,12 @@ const routes: RouteRecordRaw[] = [
 				meta: { title: "店铺管理 - 南渡商城" },
 			},
 			{
+				path: "user-list",
+				name: "admin-user-list",
+				component: () => import("@/views/admin/UserListView.vue"),
+				meta: { title: "用户管理 - 南渡商城", requiresAdmin: true },
+			},
+			{
 				path: "admin-user",
 				name: "admin-user",
 				component: () => import("@/views/admin/AdminUserView.vue"),

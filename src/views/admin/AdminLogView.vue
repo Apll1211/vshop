@@ -28,27 +28,30 @@ const rowSelection = computed(() => ({
 	},
 }));
 
-const columns = computed(() => {
-	// 移除 IP 地址列
-	const allColumns = [
-		{ title: "ID", dataIndex: "_id", key: "_id", width: 220 },
-		{ title: "操作人", dataIndex: "adminName", key: "adminName", width: 120 },
-		{ title: "操作内容", dataIndex: "describe", key: "describe", minWidth: 200 },
-		{ title: "操作时间", dataIndex: "created_at", key: "created_at", width: 180 },
-		{
-			title: "操作",
-			key: "action",
-			width: isMobile.value ? 80 : 120,
-			fixed: isMobile.value ? undefined : "right",
-		},
-	];
+const columns = ref([
+	{ title: "ID", dataIndex: "_id", key: "_id", width: 220, resizable: true },
+	{ title: "操作人", dataIndex: "adminName", key: "adminName", width: 120, resizable: true },
+	{ title: "操作内容", dataIndex: "describe", key: "describe", width: 250, resizable: true },
+	{ title: "操作时间", dataIndex: "created_at", key: "created_at", width: 180, resizable: true },
+	{
+		title: "操作",
+		key: "action",
+		width: isMobile.value ? 80 : 120,
+		resizable: true,
+	},
+]);
 
+const displayedColumns = computed(() => {
 	if (isMobile.value) {
 		// 移动端隐藏 ID 和 操作时间
-		return allColumns.filter((col) => !["_id", "created_at"].includes(col.key as string));
+		return columns.value.filter((col) => !["_id", "created_at"].includes(col.key as string));
 	}
-	return allColumns;
+	return columns.value;
 });
+
+const handleResizeColumn = (w: number, col: any) => {
+	col.width = w;
+};
 
 // 获取日志列表
 const fetchLogs = async () => {
@@ -196,7 +199,7 @@ onMounted(() => {
       </div>
 
       <a-table
-        :columns="columns"
+        :columns="displayedColumns"
         :data-source="logData"
         :loading="loading"
         :row-selection="rowSelection"
@@ -210,6 +213,7 @@ onMounted(() => {
         }"
         row-key="_id"
         @change="handleTableChange"
+        @resizeColumn="handleResizeColumn"
         :scroll="{ x: 'max-content' }"
       >
         <template #bodyCell="{ column, record }">

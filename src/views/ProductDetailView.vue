@@ -70,12 +70,15 @@ onMounted(async () => {
 			// 后端返回可能在 res.data 中，拦截器已处理
 			product.value = res.data || res.product || res;
 
-			// 初始化选中属性
+			// 初始化选中属性 (兼容新旧格式)
 			if (spuSaleAttrList.value.length > 0) {
-				spuSaleAttrList.value.forEach((attr) => {
-					if (attr.spuSaleAttrValueList && attr.spuSaleAttrValueList.length > 0) {
-						selectedAttrs.value[attr.saleAttrName] =
-							attr.spuSaleAttrValueList[0]?.saleAttrValueName || "";
+				spuSaleAttrList.value.forEach((attr: any) => {
+					const attrName = attr.attr || attr.saleAttrName;
+					const values = attr.attrValue || attr.spuSaleAttrValueList;
+					
+					if (values && values.length > 0) {
+						const firstVal = typeof values[0] === 'string' ? values[0] : (values[0].attrValue || values[0].saleAttrValueName);
+						selectedAttrs.value[attrName] = firstVal || "";
 					}
 				});
 			}
@@ -260,19 +263,19 @@ const productName = computed(() => skuInfo.value?.fullName || skuInfo.value?.nam
           </Card>
 
           <!-- 属性选择 -->
-          <div v-for="attr in spuSaleAttrList" :key="attr._id" class="space-y-3">
-            <h3 class="text-sm font-medium text-zinc-700">{{ attr.saleAttrName }}</h3>
+          <div v-for="attr in spuSaleAttrList" :key="attr.attr || attr.saleAttrName" class="space-y-3">
+            <h3 class="text-sm font-medium text-zinc-700">{{ attr.attr || attr.saleAttrName }}</h3>
             <div class="flex flex-wrap gap-2">
               <button
-                v-for="value in attr.spuSaleAttrValueList"
-                :key="value._id || value.saleAttrValueName"
+                v-for="value in (attr.attrValue || (attr as any).spuSaleAttrValueList)"
+                :key="typeof value === 'string' ? value : value.saleAttrValueName"
                 class="px-4 py-2 rounded-lg border-2 transition-all"
-                :class="isSelected(attr.saleAttrName, value.saleAttrValueName) 
+                :class="isSelected(attr.attr || attr.saleAttrName, typeof value === 'string' ? value : value.saleAttrValueName) 
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
                   : 'border-zinc-200 hover:border-zinc-300'"
-                @click="selectAttr(attr.saleAttrName, value.saleAttrValueName)"
+                @click="selectAttr(attr.attr || attr.saleAttrName, typeof value === 'string' ? value : value.saleAttrValueName)"
               >
-                {{ value.saleAttrValueName }}
+                {{ typeof value === 'string' ? value : value.saleAttrValueName }}
               </button>
             </div>
           </div>
