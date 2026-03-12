@@ -270,12 +270,13 @@ const productName = computed(() => skuInfo.value?.fullName || skuInfo.value?.nam
                 v-for="value in (attr.attrValue || (attr as any).spuSaleAttrValueList)"
                 :key="typeof value === 'string' ? value : value.saleAttrValueName"
                 class="px-4 py-2 rounded-lg border-2 transition-all"
-                :class="isSelected(attr.attr || attr.saleAttrName, typeof value === 'string' ? value : value.saleAttrValueName) 
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
-                  : 'border-zinc-200 hover:border-zinc-300'"
-                @click="selectAttr(attr.attr || attr.saleAttrName, typeof value === 'string' ? value : value.saleAttrValueName)"
-              >
-                {{ typeof value === 'string' ? value : value.saleAttrValueName }}
+                :class="isSelected(attr.attr || attr.saleAttrName || '', 
+                  typeof value === 'string' ? value : (value.attrValue || value.saleAttrValueName || ''))
+                ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                : 'border-zinc-200 hover:border-zinc-300'"
+              @click="selectAttr(attr.attr || attr.saleAttrName || '', typeof value === 'string' ? value : (value.attrValue || value.saleAttrValueName || ''))"
+            >
+              {{ typeof value === 'string' ? value : (value.attrValue || value.saleAttrValueName) }}
               </button>
             </div>
           </div>

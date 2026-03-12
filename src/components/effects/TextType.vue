@@ -69,6 +69,7 @@ const clearTimeoutIfNeeded = () => {
 
 const executeTypingAnimation = () => {
 	const currentText = textArray.value[currentTextIndex.value];
+	if (!currentText) return;
 	const processedText = props.reverseMode ? currentText.split("").reverse().join("") : currentText;
 
 	if (isDeleting.value) {
@@ -76,7 +77,9 @@ const executeTypingAnimation = () => {
 			isDeleting.value = false;
 			if (currentTextIndex.value === textArray.value.length - 1 && !props.loop) return;
 
-			props.onSentenceComplete?.(textArray.value[currentTextIndex.value], currentTextIndex.value);
+			if (textArray.value[currentTextIndex.value]) {
+				props.onSentenceComplete?.(textArray.value[currentTextIndex.value]!, currentTextIndex.value);
+			}
 
 			currentTextIndex.value = (currentTextIndex.value + 1) % textArray.value.length;
 			currentCharIndex.value = 0;
@@ -90,7 +93,7 @@ const executeTypingAnimation = () => {
 		if (currentCharIndex.value < processedText.length) {
 			timeout = setTimeout(
 				() => {
-					displayedText.value += processedText[currentCharIndex.value];
+					displayedText.value += processedText[currentCharIndex.value] || "";
 					currentCharIndex.value += 1;
 				},
 				props.variableSpeed ? getRandomSpeed() : props.typingSpeed,
@@ -167,7 +170,7 @@ onBeforeUnmount(() => {
       v-if="showCursor"
       ref="cursorRef"
       :class="`ml-1 inline-block opacity-100 ${
-        hideCursorWhileTyping && (currentCharIndex < textArray[currentTextIndex].length || isDeleting) ? 'hidden' : ''
+        hideCursorWhileTyping && (currentCharIndex < (textArray[currentTextIndex]?.length || 0) || isDeleting) ? 'hidden' : ''
       } ${cursorClassName}`"
     >
       {{ cursorCharacter }}

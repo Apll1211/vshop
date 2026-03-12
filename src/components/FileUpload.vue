@@ -38,7 +38,7 @@ watch(() => props.value, (newVal) => {
     uid: `-${index}`,
     name: `image-${index}`,
     status: 'done',
-    url: getFileUrl(url, props.contextId, props.directory === 'admin/avatar' ? 'avatar' : props.directory as any),
+    url: getFileUrl(url, props.contextId, props.directory as any),
     rawPath: url 
   }));
 }, { immediate: true, deep: true });
@@ -82,7 +82,7 @@ const handleCustomRequest = async (options: any) => {
         const currentPaths = Array.isArray(props.value) ? [...props.value] : [];
         currentPaths.push(finalPath);
         emit('update:value', currentPaths);
-        emit('change', finalPaths);
+        emit('change', currentPaths);
       }
       message.success('上传成功');
     } else {

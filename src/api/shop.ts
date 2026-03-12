@@ -2,8 +2,12 @@ import request from "./request";
 import type { ApiResponse, Shop } from "./types";
 
 // 获取店铺列表
-export const getShopList = () => {
-	return request.get<{ code: number; shopList: Shop[] }>("/shopList");
+export const getShopList = (params?: {
+	pageNo?: number;
+	pageSize?: number;
+	name?: string;
+}) => {
+	return request.get<{ code: number; shopList: Shop[]; count?: number }>("/shopList", { params });
 };
 
 // 获取店铺详情

@@ -11,6 +11,7 @@ export const getSpuList = (params?: {
 	category1Id?: string;
 	category2Id?: string;
 	categoryId?: string;
+	name?: string;
 	pageNo?: number;
 	pageSize?: number;
 }) => {

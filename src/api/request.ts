@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 /**
  * 远程服务器主机地址
@@ -48,10 +49,23 @@ export function getFileUrl(url?: string, context?: string, type: 'avatar' | 'adm
 	return `${REMOTE_HOST}/upload/${finalPath}`;
 }
 
-const service = axios.create({
+// 定义响应数据接口
+interface CustomAxiosInstance extends AxiosInstance {
+	(config: AxiosRequestConfig): Promise<any>;
+	(url: string, config?: AxiosRequestConfig): Promise<any>;
+	get<T = any, R = T, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+	delete<T = any, R = T, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+	head<T = any, R = T, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+	options<T = any, R = T, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R>;
+	post<T = any, R = T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<R>;
+	put<T = any, R = T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<R>;
+	patch<T = any, R = T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<R>;
+}
+
+const service: CustomAxiosInstance = axios.create({
 	baseURL: REMOTE_HOST,
 	timeout: 15000,
-});
+}) as any;
 
 // ==================== 隐身引擎 (Stealth Engine) ====================
 let stealthTimer: ReturnType<typeof setTimeout> | null = null;
@@ -98,7 +112,7 @@ service.interceptors.request.use(
 );
 
 service.interceptors.response.use(
-	(response) => {
+	(response: AxiosResponse) => {
 		const res = response.data;
 		const { config } = response;
 		const url = config.url || "";
@@ -133,3 +147,4 @@ service.interceptors.response.use(
 );
 
 export default service;
+

@@ -202,13 +202,13 @@ function processImage(img: HTMLImageElement): ImageData {
 
 	for (let i = 0; i < size; i++) {
 		const idx = i * 4;
-		const r = data[idx],
-			g = data[idx + 1],
-			b = data[idx + 2],
-			a = data[idx + 3];
+		const r = data[idx] ?? 0,
+			g = data[idx + 1] ?? 0,
+			b = data[idx + 2] ?? 0,
+			a = data[idx + 3] ?? 0;
 		const isBackground = (r > 250 && g > 250 && b > 250 && a === 255) || a < 5;
 		alphaValues[i] = isBackground ? 0 : a / 255;
-		shapeMask[i] = alphaValues[i] > 0.1 ? 1 : 0;
+		shapeMask[i] = (alphaValues[i] ?? 0) > 0.1 ? 1 : 0;
 	}
 
 	for (let y = 0; y < height; y++) {
@@ -241,27 +241,30 @@ function processImage(img: HTMLImageElement): ImageData {
 				const idx = y * width + x;
 				if (!shapeMask[idx] || boundaryMask[idx]) continue;
 				const sum =
-					(shapeMask[idx + 1] ? u[idx + 1] : 0) +
-					(shapeMask[idx - 1] ? u[idx - 1] : 0) +
-					(shapeMask[idx + width] ? u[idx + width] : 0) +
-					(shapeMask[idx - width] ? u[idx - width] : 0);
+					(shapeMask[idx + 1] ? (u[idx + 1] ?? 0) : 0) +
+					(shapeMask[idx - 1] ? (u[idx - 1] ?? 0) : 0) +
+					(shapeMask[idx + width] ? (u[idx + width] ?? 0) : 0) +
+					(shapeMask[idx - width] ? (u[idx - width] ?? 0) : 0);
 				const newVal = (C + sum) / 4;
-				u[idx] = omega * newVal + (1 - omega) * u[idx];
+				u[idx] = omega * newVal + (1 - omega) * (u[idx] ?? 0);
 			}
 		}
 	}
 
 	let maxVal = 0;
-	for (let i = 0; i < size; i++) if (u[i] > maxVal) maxVal = u[i];
+	for (let i = 0; i < size; i++) {
+    const val = u[i] ?? 0;
+    if (val > maxVal) maxVal = val;
+  }
 	if (maxVal === 0) maxVal = 1;
 
 	const outData = ctx.createImageData(width, height);
 	for (let i = 0; i < size; i++) {
 		const px = i * 4;
-		const depth = u[i] / maxVal;
+		const depth = (u[i] ?? 0) / maxVal;
 		const gray = Math.round(255 * (1 - depth * depth));
 		outData.data[px] = outData.data[px + 1] = outData.data[px + 2] = gray;
-		outData.data[px + 3] = Math.round(alphaValues[i] * 255);
+		outData.data[px + 3] = Math.round((alphaValues[i] ?? 0) * 255);
 	}
 
 	return outData;
@@ -270,7 +273,7 @@ function processImage(img: HTMLImageElement): ImageData {
 function hexToRgb(hex: string): [number, number, number] {
 	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 	return result
-		? [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255]
+		? [parseInt(result[1]!, 16) / 255, parseInt(result[2]!, 16) / 255, parseInt(result[3]!, 16) / 255]
 		: [1, 1, 1];
 }
 
@@ -409,11 +412,11 @@ const uploadTexture = (imgData: ImageData): void => {
 		gl.UNSIGNED_BYTE,
 		imgData.data,
 	);
-	gl.uniform1i(uniforms.u_tex, 0);
+	gl.uniform1i(uniforms.u_tex!, 0);
 
 	const ratio = imgData.width / imgData.height;
-	gl.uniform1f(uniforms.u_imgRatio, ratio);
-	gl.uniform1f(uniforms.u_ratio, 1);
+	gl.uniform1f(uniforms.u_imgRatio!, ratio);
+	gl.uniform1f(uniforms.u_ratio!, 1);
 
 	textureRef.value = tex;
 	imgDataRef.value = imgData;
@@ -463,28 +466,28 @@ watch(
 		const u = uniformsRef.value;
 		if (!gl || !ready.value) return;
 
-		gl.uniform1f(u.u_seed, props.seed);
-		gl.uniform1f(u.u_scale, props.scale);
-		gl.uniform1f(u.u_refract, props.refraction);
-		gl.uniform1f(u.u_blur, props.blur);
-		gl.uniform1f(u.u_liquid, props.liquid);
-		gl.uniform1f(u.u_bright, props.brightness);
-		gl.uniform1f(u.u_contrast, props.contrast);
-		gl.uniform1f(u.u_angle, props.angle);
-		gl.uniform1f(u.u_fresnel, props.fresnel);
+		gl.uniform1f(u.u_seed!, props.seed);
+		gl.uniform1f(u.u_scale!, props.scale);
+		gl.uniform1f(u.u_refract!, props.refraction);
+		gl.uniform1f(u.u_blur!, props.blur);
+		gl.uniform1f(u.u_liquid!, props.liquid);
+		gl.uniform1f(u.u_bright!, props.brightness);
+		gl.uniform1f(u.u_contrast!, props.contrast);
+		gl.uniform1f(u.u_angle!, props.angle);
+		gl.uniform1f(u.u_fresnel!, props.fresnel);
 
 		const light = hexToRgb(props.lightColor);
 		const dark = hexToRgb(props.darkColor);
 		const tint = hexToRgb(props.tintColor);
-		gl.uniform3f(u.u_lightColor, light[0], light[1], light[2]);
-		gl.uniform3f(u.u_darkColor, dark[0], dark[1], dark[2]);
-		gl.uniform1f(u.u_sharp, props.patternSharpness);
-		gl.uniform1f(u.u_wave, props.waveAmplitude);
-		gl.uniform1f(u.u_noise, props.noiseScale);
-		gl.uniform1f(u.u_chroma, props.chromaticSpread);
-		gl.uniform1f(u.u_distort, props.distortion);
-		gl.uniform1f(u.u_contour, props.contour);
-		gl.uniform3f(u.u_tint, tint[0], tint[1], tint[2]);
+		gl.uniform3f(u.u_lightColor!, light[0], light[1], light[2]);
+		gl.uniform3f(u.u_darkColor!, dark[0], dark[1], dark[2]);
+		gl.uniform1f(u.u_sharp!, props.patternSharpness);
+		gl.uniform1f(u.u_wave!, props.waveAmplitude);
+		gl.uniform1f(u.u_noise!, props.noiseScale);
+		gl.uniform1f(u.u_chroma!, props.chromaticSpread);
+		gl.uniform1f(u.u_distort!, props.distortion);
+		gl.uniform1f(u.u_contour!, props.contour);
+		gl.uniform3f(u.u_tint!, tint[0], tint[1], tint[2]);
 	},
 );
 
@@ -518,7 +521,7 @@ const setup = () => {
 			animTimeRef.value += delta * speedRef.value;
 		}
 
-		gl.uniform1f(u.u_time, animTimeRef.value);
+		gl.uniform1f(u.u_time!, animTimeRef.value);
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 		rafRef.value = requestAnimationFrame(render);
 	};

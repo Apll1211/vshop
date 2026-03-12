@@ -26,12 +26,17 @@ export interface PagedResponse<T> {
 export interface Category {
 	_id: string;
 	id: string;
+	actualId?: string; // 兼容后端 id
 	name: string;
 	parentId?: string | null;
 	level?: number;
 	showFlag: number;
 	sort: number;
 	children?: Category[];
+}
+
+export interface CategoryListResponse extends ApiResponse {
+	categoryList: Category[];
 }
 
 // ==================== 品牌相关 ====================
@@ -47,7 +52,22 @@ export interface Trademark {
 	showFlag: number;
 }
 
+export interface TrademarkListResponse extends ApiResponse {
+	trademarkList: Trademark[];
+}
+
 // ==================== 商品属性相关 ====================
+
+/**
+ * SPU 销售属性值 (后端新格式)
+ */
+export interface SpuSaleAttrValue {
+	id?: string;
+	_id?: string;
+	saleAttrValueName?: string;
+	attrValue?: string;
+	isChecked?: string | number;
+}
 
 /**
  * SPU 销售属性 (后端新格式)
@@ -55,7 +75,9 @@ export interface Trademark {
  */
 export interface SpuSaleAttr {
 	attr: string;
-	attrValue: string[];
+	saleAttrName?: string; // 兼容
+	attrValue: (string | SpuSaleAttrValue)[];
+	spuSaleAttrValueList?: SpuSaleAttrValue[]; // 兼容
 }
 
 /**
@@ -65,6 +87,8 @@ export interface SpuSaleAttr {
 export interface SkuAttrValue {
 	attr: string;
 	attrValue: string;
+	saleAttrValueName?: string; // 兼容
+	saleAttrName?: string; // 兼容
 }
 
 // ==================== SPU 相关 ====================
@@ -102,6 +126,7 @@ export interface Sku {
 	spuId: string;
 	shopId?: string;
 	skuName?: string; // 兼容
+	fullName?: string; // 兼容
 	name: string;
 	price: number;
 	skuDefaultImg?: string;
@@ -120,10 +145,13 @@ export interface ProductInfo {
 	_id: string;
 	id: string;
 	name: string;
+	fullName?: string;
+	title?: string;
 	price: number;
 	originalPrice?: number;
 	defaultImg?: string;
 	stock?: number;
+	hotScore?: number;
 }
 
 /**
@@ -150,6 +178,18 @@ export interface UserInfo {
 	loginTime?: string;
 	outLoginTime?: string;
 	token?: string;
+}
+
+export interface UserLoginParams {
+	phone: string;
+	password?: string;
+	code?: string;
+}
+
+export interface UserRegisterParams {
+	phone: string;
+	password?: string;
+	code?: string;
 }
 
 export interface UserAddress {
@@ -179,6 +219,10 @@ export interface CartItem {
 	userId: string;
 }
 
+export interface CartListResponse extends ApiResponse {
+	cartList: CartItem[];
+}
+
 export interface OrderItem {
 	_id: string;
 	id: string;
@@ -204,6 +248,22 @@ export interface Order {
 	orderDetailList?: OrderItem[];
 }
 
+export interface SubmitOrderParams {
+	consignee: string;
+	consigneeTel: string;
+	deliveryAddress: string;
+	paymentWay: string;
+	orderComment?: string;
+	orderDetailList?: any[];
+	addressId?: string;
+	skuInfoList?: any[];
+	paymentMethod?: string | number;
+}
+
+export interface OrderListResponse extends ApiResponse {
+	orderList: Order[];
+}
+
 // ==================== 管理员相关 ====================
 
 export interface AdminUser {
@@ -215,6 +275,16 @@ export interface AdminUser {
 	role: "admin" | "merchant";
 	createTime?: string;
 	loginTime?: string;
+}
+
+export interface AdminLoginParams {
+	adminName: string;
+	password?: string;
+}
+
+export interface AdminLoginResponse extends ApiResponse {
+	token: string;
+	info: AdminUser;
 }
 
 export interface AdminLog {
@@ -243,8 +313,10 @@ export interface Advertisement {
 	_id: string;
 	id: string;
 	title: string;
+	name?: string; // 兼容
 	imgUrl: string;
 	linkUrl?: string;
 	status: number;
+	sort: number;
 }
 

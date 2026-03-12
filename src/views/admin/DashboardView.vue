@@ -58,20 +58,20 @@ const fetchData = async () => {
 			getAdvList({ pageSize: 1 }).catch(() => null),
 		]);
 
-		if (spuRes) {
+		if (spuRes && stats.value[0]) {
 			const d = spuRes as any;
 			stats.value[0].value = String(d.count || d.total || d.data?.count || d.data?.total || 0);
 		}
-		if (orderRes) {
+		if (orderRes && stats.value[1]) {
 			const d = orderRes as any;
 			stats.value[1].value = String(d.count || d.total || d.data?.count || d.data?.total || 0);
 		}
-		if (shopRes) {
+		if (shopRes && stats.value[2]) {
 			const d = shopRes as any;
 			const list = d.shopList || d.data?.shopList || (Array.isArray(d) ? d : []);
 			stats.value[2].value = String(list.length || 0);
 		}
-		if (advRes) {
+		if (advRes && stats.value[3]) {
 			const d = advRes as any;
 			stats.value[3].value = String(d.total || d.count || d.data?.total || d.data?.count || 0);
 		}
@@ -81,10 +81,10 @@ const fetchData = async () => {
 			if (statsRes) {
 				// 拦截器已处理，直接访问属性
 				const s = statsRes.data || statsRes;
-				if (s.productCount !== undefined) stats.value[0].value = String(s.productCount);
-				if (s.orderCount !== undefined) stats.value[1].value = String(s.orderCount);
-				if (s.shopCount !== undefined) stats.value[2].value = String(s.shopCount);
-				if (s.advCount !== undefined) stats.value[3].value = String(s.advCount);
+				if (s.productCount !== undefined && stats.value[0]) stats.value[0].value = String(s.productCount);
+				if (s.orderCount !== undefined && stats.value[1]) stats.value[1].value = String(s.orderCount);
+				if (s.shopCount !== undefined && stats.value[2]) stats.value[2].value = String(s.shopCount);
+				if (s.advCount !== undefined && stats.value[3]) stats.value[3].value = String(s.advCount);
 			}
 		} catch (e) {
 			// ignore
